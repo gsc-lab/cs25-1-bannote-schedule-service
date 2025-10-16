@@ -1,0 +1,9 @@
+version: v2
+clean: true
+inputs: 
+  - module: buf.build/bannote/schedule-service
+plugins:
+  - remote: buf.build/protocolbuffers/ruby
+    out: grpc_service/lib
+  - remote: buf.build/grpc/ruby
+    out: grpc_service/lib

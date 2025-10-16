@@ -1,0 +1,18 @@
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/nio4r-2.7.4/ext/nio4r
+C:/Ruby34-x64/bin/ruby.exe extconf.rb
+
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/nio4r-2.7.4/ext/nio4r
+make DESTDIR\= sitearchdir\=./.gem.20251012-26060-aqb1zs sitelibdir\=./.gem.20251012-26060-aqb1zs clean
+make: *** 타겟 'clean'을(를) 만들 규칙이 없습니다.  멈춤.
+
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/nio4r-2.7.4/ext/nio4r
+make DESTDIR\= sitearchdir\=./.gem.20251012-26060-aqb1zs sitelibdir\=./.gem.20251012-26060-aqb1zs
+make: 'all'을(를) 위해 할 일이 없습니다.
+
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/nio4r-2.7.4/ext/nio4r
+make DESTDIR\= sitearchdir\=./.gem.20251012-26060-aqb1zs sitelibdir\=./.gem.20251012-26060-aqb1zs install
+make: 'install'을(를) 위해 할 일이 없습니다.
+
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/nio4r-2.7.4/ext/nio4r
+make DESTDIR\= sitearchdir\=./.gem.20251012-26060-aqb1zs sitelibdir\=./.gem.20251012-26060-aqb1zs clean
+make: *** 타겟 'clean'을(를) 만들 규칙이 없습니다.  멈춤.

@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: ban_note_development
+      MYSQL_USER: MJ
+      MYSQL_PASSWORD: MJ12
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - .:/rails
+
+  app:
+    build: .
+    depends_on:
+      - db
+      - redis
+      - kafka
+    ports:
+      - "3000:3000"
+      - "50051:50051"
+    environment:
+      RAILS_ENV: production
+      DATABASE_HOST: db
+      DATABASE_USER: MJ
+      DATABASE_PASSWORD: MJ12
+      DATABASE_NAME: ban_note_production
+      SECRET_KEY_BASE: aa91a6702241a3e22ed4b5f13353ab2ab9ff98949660dcb0a9b2e8150092ab2c6a4a766a2c820ab7bf0218d7deb894ccec222451a4f137532e43d501d2d24154
+    volumes:
+      - .:/rails
+    command: bash -c "tail -f /dev/null"
+
+volumes:
+  db_data:
+
+

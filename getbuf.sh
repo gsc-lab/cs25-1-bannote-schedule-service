@@ -1,0 +1,1 @@
+buf export buf.build/bannote/schedule-service -o C:/Users/user/Desktop/ban_note/ban_note/grpc_service/proto

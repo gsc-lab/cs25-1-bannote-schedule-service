@@ -1,0 +1,23 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8mb4
+  pool: 5
+  username: MJ
+  password: "MJ12"
+  host: db
+  ssl_mode: "disabled"
+  sslca: false
+
+development:
+  <<: *default
+  database: ban_note_development
+
+test:
+  <<: *default
+  database: ban_note_test
+
+production:
+  <<: *default
+  database: ban_note_production
+  username: MJ
+  password: "MJ12"
