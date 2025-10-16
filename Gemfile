@@ -59,4 +59,4 @@ gem "google-cloud-ai_platform", "~> 2.1"
 
 gem "mysql2", "~> 0.5"
 
-gem "grpc-tools", "= 1.57.0"
+gem "grpc-tools", "1.75.0"
