@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule_link.v1;
+
+import "google/protobuf/timestamp.proto";
+import "schedule_link/schedule_link.proto";
+
+
+service ScheduleLinkService {
+  rpc CreateScheduleLink(CreateScheduleLinkRequest) returns (CreateScheduleLinkResponse);
+  rpc GetScheduleLink(GetScheduleLinkRequest) returns (GetScheduleLinkResponse);
+  rpc UpdateScheduleLink(UpdateScheduleLinkRequest) returns (UpdateScheduleLinkResponse);
+  rpc DeleteScheduleLink(DeleteScheduleLinkRequest) returns (DeleteScheduleLinkResponse);
+}
+
+// ================================
+// 요청/응답 메시지 정의
+// ================================
+message CreateScheduleLinkRequest {
+  int64 schedule_id = 1;
+  string title = 2;
+  optional int64 place_id = 3;
+  optional string place_text = 4;
+  string description = 5;
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+  bool is_allday = 8;
+}
+
+message GetScheduleLinkRequest {
+  int64 link_id = 1;
+}
+
+message UpdateScheduleLinkRequest {
+  int64 link_id = 1;
+  optional string title = 2;
+  optional int64 place_id = 3;
+  optional string place_text = 4;
+  optional string description = 5;
+  optional google.protobuf.Timestamp start_time = 6;
+  optional google.protobuf.Timestamp end_time = 7;
+  optional bool is_allday = 8;
+}
+
+message DeleteScheduleLinkRequest {
+  int64 link_id = 1;
+}
+
+message DeleteScheduleLinkResponse {
+  bool success = 1;
+}
+
+message CreateScheduleLinkResponse {
+  ScheduleLink schedule_link = 1;
+}
+
+message GetScheduleLinkResponse {
+  ScheduleLink schedule_link = 1;
+}
+
+message UpdateScheduleLinkResponse {
+  ScheduleLink schedule_link = 1;
+}

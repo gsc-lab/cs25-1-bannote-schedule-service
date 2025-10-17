@@ -10,7 +10,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 1. 태그 생성
     def create_tag(request, _call)
-      tag = Tag.create!(
+      tag = ::Tag.create!(
         name: request.name,
         created_by: 1 # TODO: 나중에 인증된 사용자 ID로 변경
       )
@@ -21,7 +21,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 2. 단일 태그 조회
     def get_tag(request, _call)
-      tag = Tag.find(request.tag_id)
+      tag = ::Tag.find(request.tag_id)
       build_tag_response(tag)
     rescue ActiveRecord::RecordNotFound
       raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
@@ -29,7 +29,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 3. 태그 목록 조회
     def get_tag_list(_request, _call)
-      tags = Tag.order(created_at: :desc).map do |t|
+      tags = ::Tag.order(created_at: :desc).map do |t|
         build_tag_response(t)
       end
       Grpc::Tag::TagListResponse.new(tags: tags)
@@ -37,7 +37,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 4. 태그 삭제
     def delete_tag(request, _call)
-      tag = Tag.find_by(id: request.tag_id)
+      tag = ::Tag.find_by(id: request.tag_id)
       if tag
         tag.destroy
         Grpc::Tag::DeleteTagResponse.new(success: true)

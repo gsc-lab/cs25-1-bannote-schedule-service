@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule_file.v1;
+
+import "schedule_file/schedule_file.proto";
+
+
+service ScheduleFileService {
+  rpc GetScheduleFile(GetScheduleFileRequest) returns (GetScheduleFileResponse);
+  rpc DeleteScheduleFile(DeleteScheduleFileRequest) returns (DeleteScheduleFileResponse);
+}
+
+// ================================
+// 요청/응답 메시지 정의
+// ================================
+message GetScheduleFileRequest {
+  int64 file_id = 1;
+}
+
+message DeleteScheduleFileRequest {
+  int64 file_id = 1;
+}
+
+message DeleteScheduleFileResponse {
+  bool success = 1;
+}
+
+message GetScheduleFileResponse {
+  ScheduleFile schedule_file = 1;
+}

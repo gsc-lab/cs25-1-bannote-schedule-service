@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.tag.v1;
+
+import "tag/tag.proto";
+
+
+service TagService {
+  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse);
+  rpc GetTag(GetTagRequest) returns (GetTagResponse);
+  rpc GetTagList(GetTagListRequest) returns (GetTagListResponse);
+  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+}
+
+// ================================
+// 요청/응답 메시지 정의
+// ================================
+message CreateTagRequest {
+  string name = 1;
+}
+
+message GetTagRequest {
+  int64 tag_id = 1;
+}
+
+message DeleteTagRequest {
+  int64 tag_id = 1;
+}
+
+message DeleteTagResponse {
+  bool success = 1;
+}
+
+message CreateTagResponse {
+  Tag tag = 1;
+}
+
+message GetTagResponse {
+  Tag tag = 1;
+}
+
+message GetTagListRequest {
+  // No fields needed for a simple list request, but it's good practice to have a dedicated message
+}
+
+message GetTagListResponse {
+  TagListResponse tag_list_response = 1;
+}

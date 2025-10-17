@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.user.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+
+message UserGroup {
+  int64 user_id = 1;
+  int64 group_id = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message UserGroupListResponse {
+  repeated UserGroup users = 1;
+}

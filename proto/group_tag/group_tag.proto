@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.group_tag.v1;
+
+
+
+message GroupTag {
+  int64 group_id = 1;
+  int64 tag_id = 2;
+}
+
+message GroupTagListResponse {
+  repeated GroupTag group_tags = 1;
+}

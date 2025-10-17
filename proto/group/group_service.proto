@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.group.v1;
+
+import "group/group.proto";
+
+
+
+// ================================
+// Group Service 정의
+// ================================
+service GroupService {
+  rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
+  rpc GetGroupList(GetGroupListRequest) returns (GetGroupListResponse);
+  rpc GetGroup(GetGroupRequest) returns (GetGroupResponse);
+  rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse);
+  rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse);
+}
+
+// ================================
+// Group 관련 요청 메시지 정의
+// ================================
+message CreateGroupRequest {
+  int64 group_type_id = 1;
+  string group_name = 2;
+  string group_description = 3;
+  bool is_public = 4;
+  bool is_published = 5;
+  string color_default = 6;
+  string color_highlight = 7;
+  repeated int64 tag_ids = 8;
+  int64 group_permission_id = 9;
+}
+
+message GetGroupListRequest {
+  optional int64 group_type_id = 1;
+  optional bool is_public = 2;
+  optional bool is_published = 3;
+  repeated int64 tag_ids = 4;
+}
+
+message GetGroupRequest {
+  int64 group_id = 1;
+}
+
+message UpdateGroupRequest {
+  int64 group_id = 1;
+  optional string group_name = 2;
+  optional string group_description = 3;
+  optional bool is_public = 4;
+  optional bool is_published = 5;
+  optional string color_default = 6;
+  optional string color_highlight = 7;
+  repeated int64 tag_ids = 8;
+}
+
+message DeleteGroupRequest {
+  int64 group_id = 1;
+}
+
+message DeleteGroupResponse {
+  bool success = 1;
+}
+
+message CreateGroupResponse {
+  Group group = 1;
+}
+
+message GetGroupResponse {
+  Group group = 1;
+}
+
+message UpdateGroupResponse {
+  Group group = 1;
+}
+
+message GetGroupListResponse {
+  GroupListResponse group_list_response = 1;
+}

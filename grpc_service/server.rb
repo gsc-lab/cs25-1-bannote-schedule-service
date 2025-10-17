@@ -1,6 +1,5 @@
 # 1. gRPC 라이브러리 로드
 require 'grpc'
-# reflection은 Ruby 3.4 환경에서 지원 중단 → require 제거
 
 # 2. Rails 환경 로드
 require File.expand_path('../config/environment', __dir__)
@@ -52,8 +51,9 @@ end
 # 5. gRPC 서버 실행
 def main
   server = GRPC::RpcServer.new
-  server.add_http2_port('0.0.0.0:50051', :this_port_is_insecure)
-  puts " gRPC 서버가 50051 포트에서 실행 중입니다..."
+  server.add_http2_port('0.0.0.0:55005', :this_port_is_insecure)
+
+  puts " gRPC 서버가 55005 포트에서 실행 중입니다..."
 
   # 서비스 등록
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
@@ -64,6 +64,8 @@ def main
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
+
+
 
   server.run_till_terminated_or_interrupted(['INT', 'TERM'])
   puts "서버가 종료되었습니다."

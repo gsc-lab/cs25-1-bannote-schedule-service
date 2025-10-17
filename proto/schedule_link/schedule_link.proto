@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule_link.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+
+message ScheduleLink {
+  int64 link_id = 1;
+  int64 schedule_id = 2;
+  string title = 3;
+  optional int64 place_id = 4;
+  optional string place_text = 5;
+  string description = 6;
+  google.protobuf.Timestamp start_time = 7;
+  google.protobuf.Timestamp end_time = 8;
+  bool is_allday = 9;
+  int64 created_by = 10;
+  google.protobuf.Timestamp created_at = 11;
+  optional google.protobuf.Timestamp updated_at = 12;
+}

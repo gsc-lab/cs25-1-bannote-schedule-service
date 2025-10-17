@@ -172,7 +172,7 @@ GEM
       google-protobuf (>= 3.18, < 5.a)
       googleapis-common-protos (~> 1.7.0)
       grpc (~> 1.41)
-    grpc-tools (1.57.0)
+    grpc-tools (1.75.0)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
     importmap-rails (2.2.2)
@@ -398,7 +398,7 @@ DEPENDENCIES
   google-cloud-ai_platform (~> 2.1)
   google-protobuf
   grpc
-  grpc-tools (= 1.57.0)
+  grpc-tools
   importmap-rails
   jbuilder
   kamal

@@ -23,7 +23,8 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
@@ -49,7 +50,7 @@ services:
       - kafka
     ports:
       - "3000:3000"
-      - "50051:50051"
+      - "55005:55005"
     environment:
       RAILS_ENV: production
       DATABASE_HOST: db
@@ -59,9 +60,7 @@ services:
       SECRET_KEY_BASE: aa91a6702241a3e22ed4b5f13353ab2ab9ff98949660dcb0a9b2e8150092ab2c6a4a766a2c820ab7bf0218d7deb894ccec222451a4f137532e43d501d2d24154
     volumes:
       - .:/rails
-    command: bash -c "tail -f /dev/null"
+    command: bundle exec ruby grpc_service/server.rb
 
 volumes:
   db_data:
-
-

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+
+message Schedule {
+  int64 schedule_id = 1;
+  string code = 2;
+  int64 group_id = 3;
+  optional int64 schedule_link_id = 4;
+  optional string comment = 5;
+  string color = 6;
+  google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp updated_at = 8;
+  optional google.protobuf.Timestamp deleted_at = 9;
+  int64 created_by = 10;
+  optional int64 updated_by = 11;
+  optional int64 deleted_by = 12;
+}
+
+message ScheduleListResponse {
+  repeated Schedule schedules = 1;
+}

@@ -5,6 +5,8 @@ gem "grpc"
 gem "google-protobuf"
 gem "redis"
 gem "ruby-kafka"
+gem "grpc-tools"
+
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.2", ">= 8.0.2.1"
@@ -59,4 +61,3 @@ gem "google-cloud-ai_platform", "~> 2.1"
 
 gem "mysql2", "~> 0.5"
 
-gem "grpc-tools", "= 1.57.0"

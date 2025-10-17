@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.common.v1;
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/schedule_service/common/v1;commonv1";
+
+
+// 공통 Empty 메시지
+message Empty {}

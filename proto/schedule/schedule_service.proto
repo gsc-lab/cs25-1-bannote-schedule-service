@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule.v1;
+
+import "google/protobuf/timestamp.proto";
+import "schedule/schedule.proto";
+
+
+service ScheduleService {
+  rpc CreateSchedule(CreateScheduleRequest) returns (CreateScheduleResponse);
+  rpc GetScheduleList(GetScheduleListRequest) returns (GetScheduleListResponse);
+  rpc GetSchedule(GetScheduleRequest) returns (GetScheduleResponse);
+  rpc UpdateSchedule(UpdateScheduleRequest) returns (UpdateScheduleResponse);
+  rpc DeleteSchedule(DeleteScheduleRequest) returns (DeleteScheduleResponse);
+}
+
+// ================================
+// 요청/응답 메시지 정의
+// ================================
+message CreateScheduleRequest {
+  int64 group_id = 1;
+  optional string comment = 2;
+  bool is_highlighted = 3;
+  google.protobuf.Timestamp start_date = 4;
+  google.protobuf.Timestamp end_date = 5;
+}
+
+message GetScheduleListRequest {
+  repeated int64 group_ids = 1;
+  optional google.protobuf.Timestamp start_date = 2;
+  optional google.protobuf.Timestamp end_date = 3;
+}
+
+message GetScheduleRequest {
+  int64 schedule_id = 1;
+}
+
+message UpdateScheduleRequest {
+  int64 schedule_id = 1;
+  optional string comment = 2;
+  optional bool is_highlighted = 3;
+}
+
+message DeleteScheduleRequest {
+  int64 schedule_id = 1;
+}
+
+message DeleteScheduleResponse {
+  bool success = 1;
+}
+
+message CreateScheduleResponse {
+  Schedule schedule = 1;
+}
+
+message GetScheduleResponse {
+  Schedule schedule = 1;
+}
+
+message UpdateScheduleResponse {
+  Schedule schedule = 1;
+}
+
+message GetScheduleListResponse {
+  ScheduleListResponse schedule_list_response = 1;
+}

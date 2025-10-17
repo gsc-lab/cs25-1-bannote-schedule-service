@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule_file.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+
+message ScheduleFile {
+  int64 file_id = 1;
+  int64 schedule_link_id = 2;
+  string file_path = 3;
+  int64 created_by = 4;
+  google.protobuf.Timestamp created_at = 5;
+}
