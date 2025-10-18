@@ -12,7 +12,7 @@ import "tag/tag.proto";
 // ================================
 message Group {
   int64 group_id = 1;
-  string code = 2;
+  string group_code = 2;
   int64 group_type_id = 3;
   string group_name = 4;
   string group_description = 5;

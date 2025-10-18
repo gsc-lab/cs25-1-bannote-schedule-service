@@ -1,16 +1,15 @@
 default: &default
   adapter: mysql2
   encoding: utf8mb4
-  pool: 5
-  username: MJ
-  password: "MJ12"
-  host: db
-  ssl_mode: "disabled"
-  sslca: false
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  username: <%= ENV['DATABASE_USER'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
+  host: <%= ENV['DATABASE_HOST'] %>
+  port: <%= ENV['DATABASE_PORT'] %>
 
 development:
   <<: *default
-  database: ban_note_development
+  database: <%= ENV['DATABASE_NAME'] %>
 
 test:
   <<: *default
@@ -19,5 +18,19 @@ test:
 production:
   <<: *default
   database: ban_note_production
-  username: MJ
-  password: "MJ12"
+  username: <%= ENV['DATABASE_USER'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>
+
+development:
+  <<: *default
+  database: <%= ENV['DATABASE_NAME'] %>
+
+test:
+  <<: *default
+  database: ban_note_test
+
+production:
+  <<: *default
+  database: ban_note_production
+  username: <%= ENV['DATABASE_USER'] %>
+  password: <%= ENV['DATABASE_PASSWORD'] %>

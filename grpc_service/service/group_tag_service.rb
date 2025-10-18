@@ -12,17 +12,20 @@ module Bannote
 
           # 1. 그룹에 태그 추가
           def add_tag_to_group(request, _call)
-            group_tag = ::GroupTag.create!(
-              group_id: request.group_id,
-              tag_id: request.tag_id
-            )
+            group = ::Group.find_by(id: request.group_id)
+            tag   = ::Tag.find_by(id: request.tag_id)
 
-            Bannote::Scheduleservice::GroupTag::V1::GroupTagResponse.new(
-              group_id: group_tag.group_id,
-              tag_id: group_tag.tag_id
+            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+            raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
+
+            group_tag = group.group_tags.create!(tag: tag)
+
+            Bannote::Scheduleservice::GroupTag::V1::AddTagToGroupResponse.new(
+              group_tag: Bannote::Scheduleservice::GroupTag::V1::GroupTag.new(
+                group_id: group_tag.group_id,
+                tag_id: group_tag.tag_id
+              )
             )
-          rescue ActiveRecord::RecordNotFound => e
-            raise GRPC::NotFound.new("그룹 또는 태그를 찾을 수 없습니다.")
           rescue => e
             raise GRPC::Internal.new("그룹에 태그 추가 실패: #{e.message}")
           end
@@ -31,15 +34,14 @@ module Bannote
           def get_tags_of_group(request, _call)
             group = ::Group.find(request.group_id)
             tags = group.tags.map do |tag|
-              Bannote::Scheduleservice::Tag::V1::TagResponse.new(
+              Bannote::Scheduleservice::Tag::V1::Tag.new(
                 tag_id: tag.id,
                 name: tag.name,
-                created_by: tag.created_by || 0,
                 created_at: Google::Protobuf::Timestamp.new(seconds: tag.created_at.to_i)
               )
             end
 
-            Bannote::Scheduleservice::Tag::V1::TagListResponse.new(tags: tags)
+            Bannote::Scheduleservice::GroupTag::V1::GetTagsOfGroupResponse.new(tags: tags)
           rescue ActiveRecord::RecordNotFound
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.")
           end

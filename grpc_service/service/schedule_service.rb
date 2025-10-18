@@ -2,6 +2,7 @@ require 'grpc'
 require 'schedule/schedule_pb'
 require 'schedule/schedule_service_services_pb'
 require 'google/protobuf/well_known_types'
+require 'securerandom'
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
@@ -15,22 +16,27 @@ module Bannote::Scheduleservice::Schedule::V1
           start_time: Time.at(request.start_date.seconds),
           end_time: Time.at(request.end_date.seconds),
           is_allday: false,
-          created_by: request.created_by
+          created_by: 1 # Placeholder for created_by
         )
 
         # 1-2. 일정 생성
+        group = ::Group.find(request.group_id) # db에서 그룹 조회
         schedule = Schedule.create!(
           group_id: request.group_id,
+          group_code: group.group_code,
           schedule_link_id: link.id,
+          schedule_code: SecureRandom.hex(8), #자동 생성
           color: request.is_highlighted ? "highlight" : "normal",
-          created_by: request.created_by,
+          created_by: 1, # Placeholder for created_by
           comment: request.comment
         )
 
         # 응답 변환
         Schedule::ScheduleResponse.new(
           schedule_id: schedule.id,
+          schedule_code: schedule.schedule_code,
           group_id: schedule.group_id,
+          code: schedule.group.group_code,
           schedule_link_id: schedule.schedule_link_id,
           color: schedule.color,
           created_by: schedule.created_by,
@@ -50,7 +56,9 @@ module Bannote::Scheduleservice::Schedule::V1
       schedule_responses = schedules.map do |s|
         Schedule::ScheduleResponse.new(
           schedule_id: s.id,
+          schedule_code: s.schedule_code,
           group_id: s.group_id,
+          code: s.group.group_code,
           schedule_link_id: s.schedule_link_id,
           color: s.color,
           created_by: s.created_by,
@@ -66,7 +74,9 @@ module Bannote::Scheduleservice::Schedule::V1
       s = Schedule.find(request.schedule_id)
       Schedule::ScheduleResponse.new(
         schedule_id: s.id,
+        schedule_code: s.schedule_code,
         group_id: s.group_id,
+        code: s.group.group_code,
         schedule_link_id: s.schedule_link_id,
         color: s.color,
         created_by: s.created_by,
@@ -92,7 +102,9 @@ module Bannote::Scheduleservice::Schedule::V1
 
       Schedule::ScheduleResponse.new(
         schedule_id: schedule.id,
+        schedule_code: schedule.schedule_code,
         group_id: schedule.group_id,
+        code: schedule.group.group_code,
         schedule_link_id: link.id,
         color: schedule.color,
         created_by: schedule.created_by,

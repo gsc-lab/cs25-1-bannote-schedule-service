@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_11_063302) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_18_050203) do
   create_table "group_permissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "permission", null: false
     t.datetime "created_at"
@@ -43,6 +43,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_063302) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "group_permission_id"
+    t.string "group_code"
   end
 
   create_table "schedule_files", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -78,6 +79,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_063302) do
     t.integer "created_by", null: false
     t.integer "updated_by"
     t.integer "deleted_by"
+    t.string "schedule_code"
     t.index ["schedule_link_id"], name: "index_schedules_on_schedule_link_id"
   end
 

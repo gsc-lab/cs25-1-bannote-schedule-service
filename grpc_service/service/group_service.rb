@@ -4,6 +4,8 @@ require 'group/group_pb'
 require 'group/group_service_services_pb'
 # TagResponse를 사용하므로 tag 폴더의 pb 파일을 불러옵니다.
 require 'tag/tag_pb'
+require 'securerandom'
+
 
 # 코드를 정리하기 위한 네임스페이스
 module Bannote
@@ -15,6 +17,7 @@ module Bannote
 
           # 1. 그룹 생성
           def create_group(request, _call)
+            puts "[DEBUG] Entering create_group method"
             group = ::Group.create!(
               group_type_id: request.group_type_id,
               group_name: request.group_name,
@@ -24,18 +27,34 @@ module Bannote
               color_default: request.color_default,
               color_highlight: request.color_highlight,
               group_permission_id: request.group_permission_id,
+              group_code: SecureRandom.hex(8),
               created_by: 1 # 나중에 인증된 사용자 ID로 변경
             )
+            puts "[DEBUG] Group created with ID: #{group.id}"
 
             # 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
-            if request.tag_ids
+            if request.tag_ids && !request.tag_ids.empty?
+              puts "[DEBUG] Processing tag_ids: #{request.tag_ids.join(', ')}"
+              existing_tags = ::Tag.where(id: request.tag_ids)
+              if existing_tags.length != request.tag_ids.length
+                missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
+                puts "[DEBUG] Missing tag IDs: #{missing_tag_ids.join(', ')}"
+                raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
+              end
+
               request.tag_ids.each do |tag_id|
+                puts "[DEBUG] Creating GroupTag for group_id: #{group.id}, tag_id: #{tag_id}"
                 ::GroupTag.create!(group_id: group.id, tag_id: tag_id)
+                puts "[DEBUG] GroupTag created successfully."
               end
             end
 
-            build_group_response(group.reload)
+            Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
+          rescue ActiveRecord::RecordInvalid => e
+            puts "[DEBUG] Caught ActiveRecord::RecordInvalid: #{e.message}"
+            raise GRPC::InvalidArgument.new("그룹에 태그 추가 실패: #{e.message}")
           rescue => e
+            puts "[DEBUG] Caught generic exception: #{e.class}: #{e.message}"
             raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
           end
 
@@ -59,7 +78,7 @@ module Bannote
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
           def get_group(request, _call)
             group = ::Group.find(request.group_id)
-            build_group_response(group)
+            Bannote::Scheduleservice::Group::V1::GetGroupResponse.new(group: build_group_response(group))
           #에러나니깐 서버에 던짐
           rescue ActiveRecord::RecordNotFound
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.")
@@ -110,19 +129,17 @@ module Bannote
           # ActiveRecord 모델 객체를 gRPC 응답 메시지로 변환하는 헬퍼 메소드
           #grpc가 이해할수있는 응답형태롤 만들어주기 위해서  데이터 변환
           def build_group_response(group)
-            #TagResponse도 새로운 모듈 이름으로 생성
             tags = group.tags.map do |t|
-              Bannote::Scheduleservice::Tag::V1::TagResponse.new(
+              Bannote::Scheduleservice::Tag::V1::Tag.new(
                 tag_id: t.id,
                 name: t.name,
-                created_by: t.created_by || 0,
                 created_at: Google::Protobuf::Timestamp.new(seconds: t.created_at.to_i)
               )
             end
 
-            # GroupResponse도 새로운 모듈 이름으로 생성
-            Bannote::Scheduleservice::Group::V1::GroupResponse.new(
+            Bannote::Scheduleservice::Group::V1::Group.new(
               group_id: group.id,
+              code: group.group_code,
               group_type_id: group.group_type_id,
               group_name: group.group_name,
               group_description: group.group_description || "",
