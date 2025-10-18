@@ -36,7 +36,7 @@ module Bannote::Scheduleservice::ScheduleFile::V1
           file.destroy
           Bannote::Scheduleservice::ScheduleFile::V1::DeleteScheduleFileResponse.new(success: true)
         else
-          # ✅ 존재하지 않을 경우에도 같은 방식으로
+          # 존재하지 않을 경우에도 같은 방식으로
           raise GRPC::BadStatus.new_status_exception(
             GRPC::Core::StatusCodes::NOT_FOUND,
             "Schedule file not found"
