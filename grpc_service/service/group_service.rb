@@ -5,6 +5,7 @@ require 'group/group_service_services_pb'
 # TagResponse를 사용하므로 tag 폴더의 pb 파일을 불러옵니다.
 require 'tag/tag_pb'
 require 'securerandom'
+require_relative '../helpers/token_helper'
 
 
 # 코드를 정리하기 위한 네임스페이스
@@ -14,10 +15,49 @@ module Bannote
       module V1
         #  새로운 package 이름에 맞는 클래스 상속
         class GroupServiceHandler < Bannote::Scheduleservice::Group::V1::GroupService::Service
-
           # 1. 그룹 생성
           def create_group(request, _call)
-            puts "[DEBUG] Entering create_group method"
+          #1. 요청 파싱 시작 
+          group_type_id = request.group_type_id,
+          group_name = request.group_name,
+          group_description = request.group_description,
+          is_public = request.is_public,
+          is_published = request.is_published,
+          color_default = request.color_default,
+          color_highlight = request.color_highlight,
+          tag_ids =  request.tag_ids,
+          #2. 유효성 검사
+          #2.1 필수값  검증
+          raise GRPC::InvalidArgument.new("group_name은 필수입니다")if group_name.blank?
+          raise GRPC::InvalidArgument.new("group_type_id는 필수입니다")if group_type_id.nil?
+          raise GRPC::InvalidArgument.new("color_default는 hex형식이어야합니다")unless color_default =~ /^#[0-9A-Fa-f]{6}$/
+          raise GRPC::InvalidArgument.new("group_name은 50자 미만으로 해주세요")if group_name.length >50
+          if is_published && !is_public # 그룹 검색할떄 false이면 공개 x
+            puts "[INFO]비공개 그룹이 발행되었습니다 . 공개목록에는 표시되지않습니다"
+          end
+
+          #1.2 기본 색깔 
+          color_default  ||= 172C66x4
+          color_highlight ||=  F4E58F
+
+       
+          #3. 인증(jwt)
+          #1.  jwt인증
+          user_id,role = TokenHelper.verify_token(call)
+          puts "[DEBUG]인증 성공 user_id=#{user_id},role=#{role}"
+
+          #2. 권한 검증 groud_tpye_id =1 (조교님 이상 생성가능) groud_type_id =2(전부다 가능)
+        case request.group_type_id
+        when 1  #정규 수업
+          unless %W[assistant admin].include?(role)
+            raise GRPC::PermissionDenied.new("기본 그룹은 조교 이상만 생성 할 수있습니다")
+          end
+        when 2 #개인 그룹
+          puts "[info] 개인 그룹 생성 role #{role}"
+        else
+          raise GRPC::InvalidArgument.new("유효하지 않는 그룹 타입입니다")
+        end
+          #4.그룹 생성
             group = ::Group.create!(
               group_type_id: request.group_type_id,
               group_name: request.group_name,
@@ -28,28 +68,26 @@ module Bannote
               color_highlight: request.color_highlight,
               group_permission_id: request.group_permission_id,
               group_code: SecureRandom.hex(8),
-              created_by: 1 # 나중에 인증된 사용자 ID로 변경
+              created_by: user_id
             )
             puts "[DEBUG] Group created with ID: #{group.id}"
 
-            # 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
+            # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
             if request.tag_ids && !request.tag_ids.empty?
               puts "[DEBUG] Processing tag_ids: #{request.tag_ids.join(', ')}"
               existing_tags = ::Tag.where(id: request.tag_ids)
               if existing_tags.length != request.tag_ids.length
                 missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
-                puts "[DEBUG] Missing tag IDs: #{missing_tag_ids.join(', ')}"
                 raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
               end
 
               request.tag_ids.each do |tag_id|
-                puts "[DEBUG] Creating GroupTag for group_id: #{group.id}, tag_id: #{tag_id}"
                 ::GroupTag.create!(group_id: group.id, tag_id: tag_id)
-                puts "[DEBUG] GroupTag created successfully."
               end
             end
-
-            Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
+            
+           # 6.응답생성
+          Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
           rescue ActiveRecord::RecordInvalid => e
             puts "[DEBUG] Caught ActiveRecord::RecordInvalid: #{e.message}"
             raise GRPC::InvalidArgument.new("그룹에 태그 추가 실패: #{e.message}")
@@ -61,7 +99,7 @@ module Bannote
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, _call)
             groups = ::Group.all # 기본적으로 모든 그룹 조회
-            
+    
             groups = groups.where(group_type_id: request.group_type_id) if request.group_type_id != 0
             groups = groups.where(is_public: request.is_public) if request.has_is_public?
             groups = groups.where(is_published: request.is_published) if request.has_is_published?

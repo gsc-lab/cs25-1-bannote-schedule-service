@@ -55,12 +55,11 @@ def main
 
   puts " gRPC 서버가 55005 포트에서 실행 중입니다..."
 
-  # 서비스 등록
+  # 서비스 등록 grpc서버 요청 진입점
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::GroupTag::V1::GroupTagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Tag::V1::TagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
-  # server.handle(Bannote::Scheduleservice::User::V1::UserServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
