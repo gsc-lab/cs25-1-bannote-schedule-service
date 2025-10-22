@@ -7,10 +7,10 @@ checking for whether -std=c99 is accepted as CFLAGS... no
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/ed25519-1.4.0/ext/ed25519_ref10
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-c161m7 sitelibdir\=./.gem.20251012-26060-c161m7 clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-zfgmxm sitelibdir\=./.gem.20251022-9860-zfgmxm clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/ed25519-1.4.0/ext/ed25519_ref10
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-c161m7 sitelibdir\=./.gem.20251012-26060-c161m7
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-zfgmxm sitelibdir\=./.gem.20251022-9860-zfgmxm
 generating ed25519_ref10-x64-mingw-ucrt.def
 compiling ed25519_ref10.c
 compiling fe.c
@@ -25,8 +25,8 @@ compiling verify.c
 linking shared-object ed25519_ref10.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/ed25519-1.4.0/ext/ed25519_ref10
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-c161m7 sitelibdir\=./.gem.20251012-26060-c161m7 install
-/usr/bin/install -c -m 0755 ed25519_ref10.so ./.gem.20251012-26060-c161m7
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-zfgmxm sitelibdir\=./.gem.20251022-9860-zfgmxm install
+/usr/bin/install -c -m 0755 ed25519_ref10.so ./.gem.20251022-9860-zfgmxm
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/ed25519-1.4.0/ext/ed25519_ref10
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-c161m7 sitelibdir\=./.gem.20251012-26060-c161m7 clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-zfgmxm sitelibdir\=./.gem.20251022-9860-zfgmxm clean

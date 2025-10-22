@@ -3,17 +3,17 @@ C:/Ruby34-x64/bin/ruby.exe extconf.rb
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-6ze89t sitelibdir\=./.gem.20251012-26060-6ze89t clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-wqyjld sitelibdir\=./.gem.20251022-9860-wqyjld clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-6ze89t sitelibdir\=./.gem.20251012-26060-6ze89t
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-wqyjld sitelibdir\=./.gem.20251022-9860-wqyjld
 generating websocket_mask-x64-mingw-ucrt.def
 compiling websocket_mask.c
 linking shared-object websocket_mask.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-6ze89t sitelibdir\=./.gem.20251012-26060-6ze89t install
-/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20251012-26060-6ze89t
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-wqyjld sitelibdir\=./.gem.20251022-9860-wqyjld install
+/usr/bin/install -c -m 0755 websocket_mask.so ./.gem.20251022-9860-wqyjld
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/websocket-driver-0.8.0/ext/websocket-driver
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-6ze89t sitelibdir\=./.gem.20251012-26060-6ze89t clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-wqyjld sitelibdir\=./.gem.20251022-9860-wqyjld clean

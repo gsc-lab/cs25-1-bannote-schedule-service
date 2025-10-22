@@ -1,9 +1,9 @@
 version: v2
 modules:
-  - name: buf.build/bannote/ban_note
+  - name: buf.build/bannote/schedule-service
     path: .
     lint:
       ignore_only:
         PACKAGE_DIRECTORY_MATCH: []
-deps:
-  - buf.build/bannote/schedule-service
+    excludes:
+      - vendor

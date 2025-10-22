@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package bannote.scheduleservice.user.v1;
 
-import "group/group.proto";
-import "user/user_group.proto";
+import "proto/group/group.proto";
+import "proto/user/user_group.proto";
 
 
 service UserGroupService {

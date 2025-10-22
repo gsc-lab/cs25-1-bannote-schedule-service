@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package bannote.scheduleservice.group_tag.v1;
 
-import "tag/tag.proto";
-import "group_tag/group_tag.proto";
+import "proto/tag/tag.proto";
+import "proto/group_tag/group_tag.proto";
 
 
 

@@ -26,18 +26,18 @@ checking for RB_WARN_CATEGORY_DEPRECATED in ruby.h... yes
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/bigdecimal-3.3.1/ext/bigdecimal
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-4ngeub sitelibdir\=./.gem.20251012-26060-4ngeub clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-fdqarr sitelibdir\=./.gem.20251022-9860-fdqarr clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/bigdecimal-3.3.1/ext/bigdecimal
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-4ngeub sitelibdir\=./.gem.20251012-26060-4ngeub
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-fdqarr sitelibdir\=./.gem.20251022-9860-fdqarr
 generating bigdecimal-x64-mingw-ucrt.def
 compiling bigdecimal.c
 compiling missing.c
 linking shared-object bigdecimal.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/bigdecimal-3.3.1/ext/bigdecimal
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-4ngeub sitelibdir\=./.gem.20251012-26060-4ngeub install
-/usr/bin/install -c -m 0755 bigdecimal.so ./.gem.20251012-26060-4ngeub
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-fdqarr sitelibdir\=./.gem.20251022-9860-fdqarr install
+/usr/bin/install -c -m 0755 bigdecimal.so ./.gem.20251022-9860-fdqarr
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/bigdecimal-3.3.1/ext/bigdecimal
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-4ngeub sitelibdir\=./.gem.20251012-26060-4ngeub clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-fdqarr sitelibdir\=./.gem.20251022-9860-fdqarr clean

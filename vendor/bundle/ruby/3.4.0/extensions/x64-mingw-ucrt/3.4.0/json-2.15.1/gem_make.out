@@ -10,17 +10,17 @@ checking for cpuid.h... yes
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/json-2.15.1/ext/json/ext/parser
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-amihhm sitelibdir\=./.gem.20251012-26060-amihhm clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8bovap sitelibdir\=./.gem.20251022-9860-8bovap clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/json-2.15.1/ext/json/ext/parser
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-amihhm sitelibdir\=./.gem.20251012-26060-amihhm
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8bovap sitelibdir\=./.gem.20251022-9860-8bovap
 generating parser-x64-mingw-ucrt.def
 compiling parser.c
 linking shared-object json/ext/parser.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/json-2.15.1/ext/json/ext/parser
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-amihhm sitelibdir\=./.gem.20251012-26060-amihhm install
-/usr/bin/install -c -m 0755 parser.so ./.gem.20251012-26060-amihhm/json/ext
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8bovap sitelibdir\=./.gem.20251022-9860-8bovap install
+/usr/bin/install -c -m 0755 parser.so ./.gem.20251022-9860-8bovap/json/ext
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/json-2.15.1/ext/json/ext/parser
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-amihhm sitelibdir\=./.gem.20251012-26060-amihhm clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8bovap sitelibdir\=./.gem.20251022-9860-8bovap clean

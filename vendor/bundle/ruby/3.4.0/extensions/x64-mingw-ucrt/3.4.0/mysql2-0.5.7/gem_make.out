@@ -30,10 +30,10 @@ Setting rpath to /usr/local/lib
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mysql2-0.5.7/ext/mysql2
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-3s2us2 sitelibdir\=./.gem.20251012-26060-3s2us2 clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-ygn4i5 sitelibdir\=./.gem.20251022-9860-ygn4i5 clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mysql2-0.5.7/ext/mysql2
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-3s2us2 sitelibdir\=./.gem.20251012-26060-3s2us2
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-ygn4i5 sitelibdir\=./.gem.20251022-9860-ygn4i5
 generating mysql2-x64-mingw-ucrt.def
 compiling client.c
 In file included from client.c:15:
@@ -61,8 +61,8 @@ compiling statement.c
 linking shared-object mysql2/mysql2.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mysql2-0.5.7/ext/mysql2
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-3s2us2 sitelibdir\=./.gem.20251012-26060-3s2us2 install
-/usr/bin/install -c -m 0755 mysql2.so ./.gem.20251012-26060-3s2us2/mysql2
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-ygn4i5 sitelibdir\=./.gem.20251022-9860-ygn4i5 install
+/usr/bin/install -c -m 0755 mysql2.so ./.gem.20251022-9860-ygn4i5/mysql2
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mysql2-0.5.7/ext/mysql2
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-3s2us2 sitelibdir\=./.gem.20251012-26060-3s2us2 clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-ygn4i5 sitelibdir\=./.gem.20251022-9860-ygn4i5 clean

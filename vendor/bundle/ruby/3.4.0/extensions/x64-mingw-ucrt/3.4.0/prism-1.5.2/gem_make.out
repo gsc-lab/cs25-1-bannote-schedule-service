@@ -6,10 +6,10 @@ checking for whether -fvisibility=hidden is accepted as CFLAGS... yes
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/prism-1.5.2/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-2a1gyt sitelibdir\=./.gem.20251012-26060-2a1gyt clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-jm73wy sitelibdir\=./.gem.20251022-9860-jm73wy clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/prism-1.5.2/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-2a1gyt sitelibdir\=./.gem.20251012-26060-2a1gyt
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-jm73wy sitelibdir\=./.gem.20251022-9860-jm73wy
 generating prism-x64-mingw-ucrt.def
 compiling api_node.c
 compiling api_pack.c
@@ -38,8 +38,8 @@ compiling ./../../src/util/pm_strpbrk.c
 linking shared-object prism/prism.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/prism-1.5.2/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-2a1gyt sitelibdir\=./.gem.20251012-26060-2a1gyt install
-/usr/bin/install -c -m 0755 prism.so ./.gem.20251012-26060-2a1gyt/prism
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-jm73wy sitelibdir\=./.gem.20251022-9860-jm73wy install
+/usr/bin/install -c -m 0755 prism.so ./.gem.20251022-9860-jm73wy/prism
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/prism-1.5.2/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-2a1gyt sitelibdir\=./.gem.20251012-26060-2a1gyt clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-jm73wy sitelibdir\=./.gem.20251022-9860-jm73wy clean

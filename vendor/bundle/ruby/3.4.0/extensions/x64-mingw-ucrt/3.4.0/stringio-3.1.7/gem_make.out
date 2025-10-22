@@ -4,17 +4,17 @@ checking for rb_io_mode_t in ruby/io.h... no
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/stringio-3.1.7/ext/stringio
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-51uwbu sitelibdir\=./.gem.20251012-26060-51uwbu clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-m7ifik sitelibdir\=./.gem.20251022-9860-m7ifik clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/stringio-3.1.7/ext/stringio
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-51uwbu sitelibdir\=./.gem.20251012-26060-51uwbu
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-m7ifik sitelibdir\=./.gem.20251022-9860-m7ifik
 generating stringio-x64-mingw-ucrt.def
 compiling stringio.c
 linking shared-object stringio.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/stringio-3.1.7/ext/stringio
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-51uwbu sitelibdir\=./.gem.20251012-26060-51uwbu install
-/usr/bin/install -c -m 0755 stringio.so ./.gem.20251012-26060-51uwbu
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-m7ifik sitelibdir\=./.gem.20251022-9860-m7ifik install
+/usr/bin/install -c -m 0755 stringio.so ./.gem.20251022-9860-m7ifik
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/stringio-3.1.7/ext/stringio
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-51uwbu sitelibdir\=./.gem.20251012-26060-51uwbu clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-m7ifik sitelibdir\=./.gem.20251022-9860-m7ifik clean

@@ -3,7 +3,7 @@ syntax = "proto3";
 package bannote.scheduleservice.schedule_link.v1;
 
 import "google/protobuf/timestamp.proto";
-import "schedule_link/schedule_link.proto";
+import "proto/schedule_link/schedule_link.proto";
 
 
 service ScheduleLinkService {

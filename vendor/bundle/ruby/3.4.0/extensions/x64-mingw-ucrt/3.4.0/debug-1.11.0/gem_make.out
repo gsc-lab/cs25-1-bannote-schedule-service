@@ -3,18 +3,18 @@ C:/Ruby34-x64/bin/ruby.exe extconf.rb
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/debug-1.11.0/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-j3ha0n sitelibdir\=./.gem.20251012-26060-j3ha0n clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-al7q8l sitelibdir\=./.gem.20251022-9860-al7q8l clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/debug-1.11.0/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-j3ha0n sitelibdir\=./.gem.20251012-26060-j3ha0n
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-al7q8l sitelibdir\=./.gem.20251022-9860-al7q8l
 generating debug-x64-mingw-ucrt.def
 compiling debug.c
 compiling iseq_collector.c
 linking shared-object debug/debug.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/debug-1.11.0/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-j3ha0n sitelibdir\=./.gem.20251012-26060-j3ha0n install
-/usr/bin/install -c -m 0755 debug.so ./.gem.20251012-26060-j3ha0n/debug
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-al7q8l sitelibdir\=./.gem.20251022-9860-al7q8l install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20251022-9860-al7q8l/debug
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/debug-1.11.0/ext/debug
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-j3ha0n sitelibdir\=./.gem.20251012-26060-j3ha0n clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-al7q8l sitelibdir\=./.gem.20251022-9860-al7q8l clean

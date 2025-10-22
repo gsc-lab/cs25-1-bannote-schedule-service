@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bannote.scheduleservice.tag.v1;
 
-import "tag/tag.proto";
+import "proto/tag/tag.proto";
 
 
 service TagService {

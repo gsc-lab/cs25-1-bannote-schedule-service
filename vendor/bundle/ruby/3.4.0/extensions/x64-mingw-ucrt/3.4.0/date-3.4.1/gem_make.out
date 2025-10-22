@@ -6,10 +6,10 @@ checking for altzone in time.h with -Werror... no
 creating Makefile
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/date-3.4.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-imxy3x sitelibdir\=./.gem.20251012-26060-imxy3x clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8kfuzs sitelibdir\=./.gem.20251022-9860-8kfuzs clean
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/date-3.4.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-imxy3x sitelibdir\=./.gem.20251012-26060-imxy3x
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8kfuzs sitelibdir\=./.gem.20251022-9860-8kfuzs
 generating date_core-x64-mingw-ucrt.def
 compiling date_core.c
 compiling date_parse.c
@@ -18,8 +18,8 @@ compiling date_strptime.c
 linking shared-object date_core.so
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/date-3.4.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-imxy3x sitelibdir\=./.gem.20251012-26060-imxy3x install
-/usr/bin/install -c -m 0755 date_core.so ./.gem.20251012-26060-imxy3x
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8kfuzs sitelibdir\=./.gem.20251022-9860-8kfuzs install
+/usr/bin/install -c -m 0755 date_core.so ./.gem.20251022-9860-8kfuzs
 
 current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/date-3.4.1/ext/date
-make DESTDIR\= sitearchdir\=./.gem.20251012-26060-imxy3x sitelibdir\=./.gem.20251012-26060-imxy3x clean
+make DESTDIR\= sitearchdir\=./.gem.20251022-9860-8kfuzs sitelibdir\=./.gem.20251022-9860-8kfuzs clean

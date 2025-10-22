@@ -5,5 +5,7 @@ inputs:
 plugins:
   - remote: buf.build/protocolbuffers/ruby
     out: grpc_service/lib
+    include_wkt: false
   - remote: buf.build/grpc/ruby
     out: grpc_service/lib
+    include_wkt: false

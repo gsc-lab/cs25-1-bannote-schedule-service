@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bannote.scheduleservice.schedule_file.v1;
 
-import "schedule_file/schedule_file.proto";
+import "proto/schedule_file/schedule_file.proto";
 
 
 service ScheduleFileService {
