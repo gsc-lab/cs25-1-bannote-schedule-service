@@ -286,7 +286,7 @@ module Bannote
 
             Bannote::Scheduleservice::Group::V1::Group.new(
               group_id: group.id,
-              code: group.group_code,
+              group_code: group.group_code,
               group_type_id: group.group_type_id,
               group_name: group.group_name,
               group_description: group.group_description || "",
