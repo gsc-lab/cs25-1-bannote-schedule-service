@@ -73,6 +73,10 @@ module Bannote
               created_by: user_id
             )
             puts "Group created with ID: #{group.id}"
+            #생성자를 해당 그룹의 맴버로 자동 등록
+            ::UserGroup.create!(user_id: user_id, group_id: group.id)
+            puts "UserGroup created for user_id-#{user_id}, group_id=#{group.id}"
+
 
             # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
             if request.tag_ids && !request.tag_ids.empty?
