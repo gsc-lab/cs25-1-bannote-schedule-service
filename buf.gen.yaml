@@ -2,6 +2,7 @@ version: v2
 clean: true
 inputs:
   - module: buf.build/bannote/schedule-service
+  - module: buf.build/bannote/token-service
 plugins:
   - remote: buf.build/protocolbuffers/ruby
     out: grpc_service/lib

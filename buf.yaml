@@ -6,4 +6,5 @@ modules:
       ignore_only:
         PACKAGE_DIRECTORY_MATCH: []
     excludes:
-      - vendor
+deps:
+  - buf.build/bannote/token-service

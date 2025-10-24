@@ -18,14 +18,14 @@ module Bannote
           # 1. 그룹 생성
           def create_group(request, call)
           #1. 요청 파싱 시작 
-          group_type_id = request.group_type_id,
-          group_name = request.group_name,
-          group_description = request.group_description,
-          is_public = request.is_public,
-          is_published = request.is_published,
-          color_default = request.color_default,
-          color_highlight = request.color_highlight,
-          tag_ids =  request.tag_ids,
+          group_type_id = request.group_type_id
+          group_name = request.group_name
+          group_description = request.group_description
+          is_public = request.is_public
+          is_published = request.is_published
+          color_default = request.color_default
+          color_highlight = request.color_highlight
+          tag_ids =  request.tag_ids
 
           #2. 유효성 검사
           #2.1 필수값  검증
@@ -38,13 +38,14 @@ module Bannote
           end
 
           #1.2 기본 색깔 
-          color_default  ||= 172C66x4
-          color_highlight ||=  F4E58F
+          color_default  ||= "172C66x4"
+          color_highlight ||=  "F4E58F"
 
        
           #3. 인증(jwt)
           #1.  jwt인증
-          user_id,role = TokenHelper.verify_token(call)
+          # user_id,role = TokenHelper.verify_token(call)
+          user_id, role = [1, "admin"]  # 임시 테스트용
           puts "인증 성공 user_id=#{user_id},role=#{role}"
 
           #2. 권한 검증 groud_tpye_id =1 (조교님 이상 생성가능) groud_type_id =2(전부다 가능)
@@ -202,7 +203,7 @@ module Bannote
             group.update!(update_attrs)
 
             # 6. 태그 수정 (전체 갱신 방식)
-            if request.tag_ids $$ !request.tag_ids.empty?
+            if request.tag_ids && !request.tag_ids.empty?
               group.tags = ::Tag.where(id: request.tag_ids)
             end
 

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bannote.scheduleservice.group.v1;
 
-import "proto/group/group.proto";
+import "group/group.proto";
 
 
 
@@ -39,7 +39,7 @@ message GetGroupListRequest {
   repeated int64 tag_ids = 4;
 }
 
-// 조교이상 관리자를 위해서 그룹 상세정보
+// 조교이상 관리자를 위해서 그룹 상세정보  
 message GetGroupRequest {
   int64 group_id = 1;
 }
