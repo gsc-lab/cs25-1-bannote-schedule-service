@@ -172,7 +172,7 @@ module Bannote
           def update_group(request, call)
             #1.파싱
             group_id = request.group_id
-            raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <=0
+            raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
             #2. jwt인증
             user_id, role = TokenHelper.verify_token(call)
@@ -188,7 +188,7 @@ module Bannote
                 raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다")
               end
             when 2
-              unless group.create_by == user.id
+              unless group.created_by == user.id
                   raise GRPC::PermissionDenied.new("개인그룹은 생성자만 삭제할 수 있습니다")
               end
             else

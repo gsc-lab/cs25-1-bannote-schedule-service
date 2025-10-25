@@ -29,6 +29,13 @@ module Bannote
             # 못찾을경우
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
             raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
+            #권한 검증
+            if group.group_type_id == 1
+              unless %w[assistant professor admin].include?(role)
+                raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
+              end
+            end
+
 
             group_tag = group.group_tags.create!(tag: tag)
 

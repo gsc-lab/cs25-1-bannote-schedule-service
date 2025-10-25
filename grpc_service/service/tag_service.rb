@@ -9,7 +9,9 @@ module Bannote::Scheduleservice::Tag::V1
   class TagServiceHandler < Bannote::Scheduleservice::Tag::V1::TagService::Service
 
     # 1. 태그 생성
-    def create_tag(request, _call)
+    def create_tag(request, call)
+      #1.파싱 
+      
       tag = ::Tag.create!(
         name: request.name
       )
