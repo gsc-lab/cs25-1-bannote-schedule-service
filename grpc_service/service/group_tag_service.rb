@@ -25,7 +25,7 @@ module Bannote
 
             #4. 태그 여부
             group = ::Group.find_by(id: request.group_id)
-            tag   = ::Tag.find_by(id: request.tag_id)
+            tag = ::Tag.find_by(id: request.tag_id)
             # 못찾을경우
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
             raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
@@ -35,8 +35,7 @@ module Bannote
                 raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
               end
             end
-
-
+            
             group_tag = group.group_tags.create!(tag: tag)
 
             Bannote::Scheduleservice::GroupTag::V1::AddTagToGroupResponse.new(

@@ -1,8 +1,8 @@
 require 'grpc'
 require 'tag/tag_pb'
 require 'tag/tag_service_services_pb'
-# GetTagList에서 Empty 메시지를 사용하므로 common_pb를 불러옵니다.
 require 'common_pb'
+require_relative '../helpers/token_helper'
 
 
 module Bannote::Scheduleservice::Tag::V1
@@ -11,34 +11,86 @@ module Bannote::Scheduleservice::Tag::V1
     # 1. 태그 생성
     def create_tag(request, call)
       #1.파싱 
+      name = request.name&.strip
+      #2. 유효성 검사
+      raise GRPC::InvalidArgument.new("태그 이름은 필수입니다")if name.nil? || name.empty?
+    
+      #.3. jwt 인증
+      user_id,role = TokenHelper.verify_token(call)
       
-      tag = ::Tag.create!(
-        name: request.name
-      )
+      #4. 권한 검사
+      raise GRPC::PermissionDenied.new("관리자 태그 생성 가능")unless role == "admin"
+
+      #5.생성
+      tag = ::Tag.create!( name: request.name )
+      #6. 응답 반환
       Bannote::Scheduleservice::Tag::V1::CreateTagResponse.new(tag: build_tag_response(tag))
     rescue => e
       raise GRPC::Internal.new("태그 생성 실패: #{e.message}")
     end
 
-    # 2. 단일 태그 조회
-    def get_tag(request, _call)
+    # 2. 단일 태그 조회(관리자용)
+    def get_tag(request, call)
+      #1.jwt 인증 (관리자용 이니깐 관리자가아니면 error 이기떄문에 먼저 검사하는게 맞음)
+      user_id,role = TokenHelper.verify_token(call)
+    #2. 파싱
+      tag_id = request.tag_id
+      raise GRPC::InvalidArgument.new("tag_id는 필수 입니다") if tag_id.nil?|| tag_id <=0
+    #3. 유효성 검사
+      unless %w[assistant professor admin].include?(role)
+        raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
+      end
+    #4. db조회
       tag = ::Tag.find(request.tag_id)
+    #5. 응답 
       Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(tag: build_tag_response(tag))
+    #6. 에러
     rescue ActiveRecord::RecordNotFound
       raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
+    rescue => e
+        raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
     end
 
-    # 3. 태그 목록 조회
-    def get_tag_list(_request, _call)
-      tags = ::Tag.order(created_at: :desc).map do |t|
-        build_tag_response(t)
+    # 3. 태그 목록 조회 
+    def get_tag_list(_request, call)
+      begin #예외가 발생할 수 있는 코드
+        #jwt 
+        user_id,role = TokenHelper.verify_token(call)
+
+        #관리자 이상일 경우
+        if %w[admin professor assistant].include?(role)
+          tags =::Tag.all.order(created_at: :desc)
+        else
+          #일반 사용자 공개 태그만 
+          tags =::Tag.where(is_public: true).order(created_at: :desc)
+        end
+
+      rescue GRPC::Unauthenticated
+         tags = ::Tag.where(is_public: true).order(created_at: :desc)
       end
-      Bannote::Scheduleservice::Tag::V1::TagListResponse.new(tags: tags)
+
+      #응답 
+      Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
+        tags: tags.map { |t| build_tag_response(t) }
+      )
+      
+    rescue => e
+      raise GRPC::Internal.new("태그 목록 조회 실패: #{e.message}")
     end
 
     # 4. 태그 삭제
-    def delete_tag(request, _call)
+    def delete_tag(request, call)
+      #1.jwt
+      user_id,role = TokenHelper.verify_token(call)
+      #2. 파싱
+      tag_id = request.tag_id
+      raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
+      #3. 
+      unless %w[assistant professor admin].include?(role)
+        raise GRPC::PermissionDenied.new("태그 삭제는 조교이상 권한있습니다")
+      #4.db
       tag = ::Tag.find_by(id: request.tag_id)
+
       if tag
         tag.destroy
         Bannote::Scheduleservice::Tag::V1::DeleteTagResponse.new(success: true)
