@@ -28,6 +28,10 @@ module BanNote
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    config.autoload_lib(ignore: %w[assets tasks grpc_service/lib])
+
+    
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
@@ -35,6 +39,7 @@ module BanNote
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
 
     # Don't generate system test files.
     config.generators.system_tests = nil

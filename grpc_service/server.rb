@@ -21,8 +21,6 @@ require 'group/group_pb'
 require 'group/group_service_services_pb'
 require 'group_tag/group_tag_pb'
 require 'group_tag/group_tag_service_services_pb'
-require 'user/user_group_pb'
-require 'user/user_group_service_services_pb'
 require 'tag/tag_pb'
 require 'tag/tag_service_services_pb'
 require 'schedule/schedule_pb'
@@ -35,13 +33,11 @@ require 'schedule_file/schedule_file_service_services_pb'
 # 직접 구현한 서비스 핸들러 파일들 로드
 require_relative 'service/group_service'
 require_relative 'service/group_tag_service'
-require_relative 'service/user_group_service'
+# require_relative 'service/user_group_service'
 require_relative 'service/tag_service'
 require_relative 'service/schedule_service'
 require_relative 'service/schedule_link_service'
 require_relative 'service/schedule_file_service'
-# 'user' 서비스는 클라이언트 역할만 하므로 로드하지 않음
-# require 'user_service'
 
 module Bannote
   module Scheduleservice
@@ -59,7 +55,7 @@ def main
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::GroupTag::V1::GroupTagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Tag::V1::TagServiceHandler.new)
-  server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
+  # server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)

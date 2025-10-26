@@ -51,13 +51,12 @@ module Bannote
           # 2. 그룹에 연결된 태그 목록 조회
           def get_tags_of_group(request, call)
             #1. 파싱
-            group_id =request.group_id
+            group_id = request.group_id
             #2. 유효성 검사
             raise GRPC::InvalidArgument.new("groud_id는 필수 입니다")if group_id.nil? || group_id <= 0
             #3. 안중
             user_id, role = TokenHelper.verify_token(call)
-
-            #4. 
+            #4. db조회
             group = ::Group.find(request.group_id)
             tags = group.tags.map do |tag|
               Bannote::Scheduleservice::Tag::V1::Tag.new(

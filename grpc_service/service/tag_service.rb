@@ -82,12 +82,16 @@ module Bannote::Scheduleservice::Tag::V1
     def delete_tag(request, call)
       #1.jwt
       user_id,role = TokenHelper.verify_token(call)
+
       #2. 파싱
       tag_id = request.tag_id
       raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
-      #3. 
+
+      #3. 권한검사
       unless %w[assistant professor admin].include?(role)
         raise GRPC::PermissionDenied.new("태그 삭제는 조교이상 권한있습니다")
+      end
+
       #4.db
       tag = ::Tag.find_by(id: request.tag_id)
 
@@ -97,6 +101,7 @@ module Bannote::Scheduleservice::Tag::V1
       else
         raise GRPC::NotFound.new("삭제할 태그를 찾을 수 없습니다.")
       end
+      
     rescue => e
       raise GRPC::Internal.new("태그 삭제 실패: #{e.message}")
     end
