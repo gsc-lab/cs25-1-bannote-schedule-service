@@ -6,7 +6,7 @@ require 'group/group_service_services_pb'
 require 'tag/tag_pb'
 require 'securerandom'
 require_relative '../helpers/token_helper'
-
+require_relative '../helpers/Role_helper'
 
 # 코드를 정리하기 위한 네임스페이스
 module Bannote
@@ -38,24 +38,23 @@ module Bannote
           end
 
           #1.2 기본 색깔 
-          color_default  ||= "172C66x4"
-          color_highlight ||=  "F4E58F"
+          color_default  ||= "#172C66"
+          color_highlight ||= "#F4E58F"
+
 
        
           #3. 인증(jwt)
           #1.  jwt인증
-          # user_id,role = TokenHelper.verify_token(call)
-          user_id, role = [1, "admin"]  # 임시 테스트용
+          user_id,role = TokenHelper.verify_token(call)
           puts "인증 성공 user_id=#{user_id},role=#{role}"
 
           #2. 권한 검증 groud_tpye_id =1 (조교님 이상 생성가능) groud_type_id =2(전부다 가능)
         case request.group_type_id
         when 1  #정규 수업
-          unless %W[assistant professor admin].include?(role) #%w을 사용하면 중간에,안넣어도됨
+          unless RoleHelper.has_authority?(user_id,4)
             raise GRPC::PermissionDenied.new("기본 그룹은 조교 이상만 생성 할 수있습니다")
           end
         when 2 #개인 그룹
-          puts " 개인 그룹 생성 role #{role}"
         else
           raise GRPC::InvalidArgument.new("유효하지 않는 그룹 타입입니다")
         end
@@ -178,17 +177,16 @@ module Bannote
             user_id, role = TokenHelper.verify_token(call)
             
             #3.그룹 조회
-            group = ::Group.find_by(id: group_id)
-            raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다").unless group
-
+           group = ::Group.find_by(id: group_id)
+           raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
             #4. 권한 검증
             case group.group_type_id
             when 1 #정규 수업
-              unless %w[assistant professor admin].include?(role)
+              unless RoleHelper.has_authority?(user_id,4)
                 raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다")
               end
             when 2
-              unless group.created_by == user.id
+              unless group.created_by == user_id
                   raise GRPC::PermissionDenied.new("개인그룹은 생성자만 삭제할 수 있습니다")
               end
             else
@@ -241,8 +239,8 @@ module Bannote
           #5.권한 검증
           case group.group_type_id
             when 1 #정규수업
-              unless %w[assistant professor admin].include?(role)
-                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제 할 수있습니다")
+              unless RoleHelper.has_authority?(user_id, 4)
+                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다")
               end
             when 2 # 개인그룹
               unless group.created_by == user_id
@@ -252,7 +250,6 @@ module Bannote
               raise GRPC::InvalidArgument.new("유효하지 않은 group_type_id입니다.")
             end
 
-       
             #6.삭제 수행
             group.destroy!
             puts "그룹 삭제 완료 ID=#{group.id}, by user_id=#{user_id}"

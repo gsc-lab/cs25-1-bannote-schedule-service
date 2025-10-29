@@ -4,6 +4,8 @@ require 'group_tag/group_tag_service_services_pb'
 require 'tag/tag_pb'
 require 'google/protobuf/well_known_types'
 require_relative '../helpers/token_helper'
+require_relative '../helpers/role_helper'
+
 
 module Bannote
   module Scheduleservice
@@ -32,7 +34,7 @@ module Bannote
             raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
             #권한 검증
             if group.group_type_id == 1
-              unless %w[assistant professor admin].include?(role)
+              unless RoleHelper.has_authority?(user_id,4)
                 raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
               end
             end
@@ -90,16 +92,23 @@ module Bannote
             #3.인증
             user_id,role =TokenHelper.verify_token(call)
 
-            #4.권한 검증 
+            #그룹 조회
             group = ::Group.find_by(id: group_id)
-            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
-              unless %w[admin professor assistant].include?(role) || group.created_by == user_id
-              raise GRPC::PermissionDenied.new("이 태그를 삭제할 권한이 없습니다.")
+            #4.권한 검증 
+            if group.group_type_id == 1
+              unless RoleHelper.has_authority?(user_id,4)
+                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 태그를 삭제할 수 있습니다")
+              end
+            else
+              unless group.created_by == user_id
+                raise GRPC::PermissionDenied.new("개인그룹은  생성자만 태그를 삭제 할 수있습니다")
+              end
             end
 
-            #5.태그 삭제못함
-            group_tag = ::GroupTag.find_by(group_id: request.group_id,tag_id: request.tag_id)
+            #5.태그 관계 삭제
+            group_tag = ::GroupTag.find_by(group_id: group_id,tag_id: tag_id)
             raise GRPC::NotFound.new("삭제할 태그 관계를 찾을 수 없습니다.") unless group_tag
 
             group_tag.destroy!
@@ -109,7 +118,7 @@ module Bannote
           rescue GRPC::BadStatus => e
             raise e
           rescue => e
-              raise GRPC::NotFound.new("삭제할 태그 관계를 찾을 수 없습니다.")
+              raise GRPC::Internal.new("그룹 태그 삭제 실패: #{e.message}")
           end
         end
       end

@@ -3,6 +3,7 @@ require 'tag/tag_pb'
 require 'tag/tag_service_services_pb'
 require 'common_pb'
 require_relative '../helpers/token_helper'
+require_relative '../helpers/Role_helper'
 
 
 module Bannote::Scheduleservice::Tag::V1
@@ -18,8 +19,10 @@ module Bannote::Scheduleservice::Tag::V1
       #.3. jwt 인증
       user_id,role = TokenHelper.verify_token(call)
       
-      #4. 권한 검사
-      raise GRPC::PermissionDenied.new("관리자 태그 생성 가능")unless role == "admin"
+      # 관리자 이상만 생성 가능
+      unless RoleHelper.has_authority?(user_id, 4)
+        raise GRPC::PermissionDenied.new("태그 생성은 조교님 이상 가능합니다.")
+      end
 
       #5.생성
       tag = ::Tag.create!( name: request.name )
@@ -37,7 +40,7 @@ module Bannote::Scheduleservice::Tag::V1
       tag_id = request.tag_id
       raise GRPC::InvalidArgument.new("tag_id는 필수 입니다") if tag_id.nil?|| tag_id <=0
     #3. 유효성 검사
-      unless %w[assistant professor admin].include?(role)
+      unless RoleHelper.has_authority?(user_id, 4)
         raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
       end
     #4. db조회
@@ -58,7 +61,7 @@ module Bannote::Scheduleservice::Tag::V1
         user_id,role = TokenHelper.verify_token(call)
 
         #관리자 이상일 경우
-        if %w[admin professor assistant].include?(role)
+        if RoleHelper.has_authority?(user_id, 4)
           tags =::Tag.all.order(created_at: :desc)
         else
           #일반 사용자 공개 태그만 

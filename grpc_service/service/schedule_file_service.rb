@@ -5,6 +5,7 @@ require 'schedule_file/schedule_file_pb'
 require 'schedule_file/schedule_file_service_services_pb'
 require 'google/protobuf/well_known_types'
 require_relative '../helpers/token_helper'
+require_relative '../helpers/Role_helper'
 require 'aws-sdk-s3'
 
 module Bannote
@@ -17,13 +18,13 @@ module Bannote
 
           # 1. 일정 파일 조회 (파일 id 기준)
           def get_schedule_file(request, call)
-            #1. 파싱
-            find_id = request.find_id
-            raise GRPC::InvalidAtgument.new("file_id는 필수 입니다")if file_id.nil? || file_id <= 0
-          
+             #1. 파싱
+            file_id = request.file_id
+            raise GRPC::InvalidArgument.new("file_id는 필수 입니다")if file_id.nil? || file_id <= 0
+            # 파일 조회
             file = ::ScheduleFile.find(request.file_id)
             raise GRPC::InvalidArgument.new("scheuleLink가 존재 하지않습니디ㅏ")if file.schedule_link_id.nil?
-
+            # 연결된 일정 링크 조회
             schedule_link =::ScheduleLink.find_by(id:file.schedule_link_id)
             raise GRPC::NotFound.new("연결된 일정 링크를 찾을 수 없습니다")if schedule_link.nil?
 
@@ -34,15 +35,15 @@ module Bannote
               raise GRPC::Unauthenticated.new("로그인이 필요합니다")
             end
 
-            # 접근 허용 로직
-            authorized = %w[admin professor assistant].include?(role) ||  # 조교님 이상
-                          file.created_by == user_id ||                    # 생성자
-                          schedule_link.user_id == user_id                 # 스케줄 링크를 들고 있는지 확인
-                                                                         
-              #없으면 error반환
-            unless authorized
-              raise GRPC::PermissionDenied.new("파일 접근 권한이 없습니다")  
-            end
+           # 그룹 소속 여부확인
+           group = schedule_link.group
+           raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다")if group.nil?
+
+           is_member = ::UserGroup.exists?(user_id: user_id, group_id: group_id)
+           unless is_member
+            raise  GRPC::PermissionDenied.new("이 그룹에 속하지 않아 파일을 조회할 수 없습니다.")
+           end
+
             #presigned url생성
 
             
@@ -71,7 +72,7 @@ module Bannote
             #1.파싱
             file_id = request.file_id
             raise GRPC::InvalidArgument.new("file_id는 필수입니다")if file_id.nil? || file_id <= 0
-
+            #파일 조회
             file = ::ScheduleFile.find_by(id: request.file_id)
             raise GRPC::NotFound.new("Schedule file not found")if file.nil?
 
@@ -82,9 +83,23 @@ module Bannote
               raise GRPC::Unauthenticated.new("로그인이 필요합ㄴ디ㅏ")
             end
 
-             authorized = %w[admin professor assistant].include?(role) || file.created_by == user_id
-            unless authorized
-              raise GRPC::PermissionDenied.new("파일 삭제 권한이 없습니다.")
+            #연결된 일정 및 그룹 조회
+            schedule_link = ::ScheduleLink.find_by(id: file.schedule_link_id)
+            raise GRPC::NotFound.new("연결된 일정 링크를 찾을 수 없습니다.") if schedule_link.nil?
+
+            group = schedule_link.group
+            raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다.") if group.nil?
+
+            #권한 검증
+            if group.group_type_id == 1
+              unless RoleHelper.has_authority?(user_id, 4)
+                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 파일을 삭제할 수 있습니다.")
+              end
+            else
+              # 개인 그룹 → 생성자만 삭제 가능
+              unless file.created_by == user_id
+                raise GRPC::PermissionDenied.new("개인 그룹 파일은 생성자만 삭제할 수 있습니다.")
+              end
             end
 
             #MinIo객체 삭제
@@ -102,7 +117,6 @@ module Bannote
             puts "Error deleting file: #{e.message}"
             raise GRPC::Internal.new("Internal error: #{e.message}")
           end
-        
         end
       end
     end

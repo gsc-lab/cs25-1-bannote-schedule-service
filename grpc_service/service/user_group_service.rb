@@ -2,7 +2,8 @@ require 'grpc'
 require 'user/user_group_pb'
 require 'user/user_group_service_services_pb'
 require 'google/protobuf/well_known_types'
-
+require_relative '../helpers/token_helper'
+require_relative '../helpers/role_helper'
 
 module Bannote::Scheduleservice::User::V1
   class UserGroupServiceHandler < Bannote::Scheduleservice::User::V1::UserGroupService::Service
