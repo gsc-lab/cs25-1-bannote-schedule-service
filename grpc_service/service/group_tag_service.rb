@@ -16,12 +16,13 @@ module Bannote
             #1. 파싱
             group_id = request.group_id
             tag_id = request.tag_id
+
             #2. 유효성 검사
             raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다.") if tag_id.nil? || tag_id <= 0
 
             #3. 인증
-            user_id,role =TokenHelper.verify_token(call)
+            user_id,role = TokenHelper.verify_token(call)
 
             #4. 태그 여부
             group = ::Group.find_by(id: request.group_id)
@@ -52,10 +53,13 @@ module Bannote
           def get_tags_of_group(request, call)
             #1. 파싱
             group_id = request.group_id
+
             #2. 유효성 검사
             raise GRPC::InvalidArgument.new("groud_id는 필수 입니다")if group_id.nil? || group_id <= 0
+
             #3. 안중
             user_id, role = TokenHelper.verify_token(call)
+
             #4. db조회
             group = ::Group.find(request.group_id)
             tags = group.tags.map do |tag|

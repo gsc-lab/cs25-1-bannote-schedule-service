@@ -61,3 +61,5 @@ gem "google-cloud-ai_platform", "~> 2.1"
 
 gem "mysql2", "~> 0.5"
 
+# AWS S3 사용을 위한 Gem 추가
+gem "aws-sdk-s3", "~> 1"

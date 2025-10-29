@@ -32,6 +32,7 @@ module Bannote
               user_id,role = TokenHelper.verify_token(call)
             rescue
               raise GRPC::Unauthenticated.new("로그인이 필요합니다")
+            end
 
             # 접근 허용 로직
             authorized = %w[admin professor assistant].include?(role) ||  # 조교님 이상
