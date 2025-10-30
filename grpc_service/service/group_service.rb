@@ -1,4 +1,5 @@
-#  새로운 파일 위치에 맞는 require 경로
+
+require_relative '../../config/environment' 
 require 'grpc'
 require 'group/group_pb'
 require 'group/group_service_services_pb'
@@ -45,7 +46,7 @@ module Bannote
           
                       #4.그룹 생성
                         group = ::Group.create!(
-                          group_type_id: request.group_type_id,
+                          group_type: request.group_type_id,
                           group_permission_id: request.group_permission_id, # FK 연결
                           group_name: request.group_name,
                           group_description: request.group_description,
@@ -67,15 +68,16 @@ module Bannote
                         puts "UserGroup created for user_id-#{user_id}, group_id=#{group.id}"
           
           
-                      # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
-                      if request.tag_ids && !request.tag_ids.empty?
-                        puts " Processing tag_ids: #{request.tag_ids.join(', ')}"
-                        existing_tags = ::Tag.where(id: request.tag_ids)
-                        if existing_tags.length != request.tag_ids.length
-                          missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
-                          raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
-                        end
-          
+                                  # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
+                                  if request.tag_ids && !request.tag_ids.empty?
+                                    puts " Processing tag_ids: #{request.tag_ids.join(', ')}"
+                                    puts "DEBUG: request.tag_ids: #{request.tag_ids.inspect}, type: #{request.tag_ids.class}"
+                                    existing_tags = ::Tag.where(id: request.tag_ids)
+                                    puts "DEBUG: existing_tags: #{existing_tags.inspect}, length: #{existing_tags.length}"
+                                    if existing_tags.length != request.tag_ids.length
+                                      missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
+                                      raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
+                                    end          
                         #태그 연결
                         if tag_ids.present?
                           existing_tags = ::Tag.where(id: tag_ids)
@@ -141,7 +143,7 @@ module Bannote
             end
             
             # 4. 추가 필터 
-            groups = groups.where(group_type_id: group_type_id) if group_type_id
+            groups = groups.where(group_type: group_type_id) if group_type_id
             groups = groups.where(is_published: is_published) if request.has_is_published?
 
             #5. 응답 생성
