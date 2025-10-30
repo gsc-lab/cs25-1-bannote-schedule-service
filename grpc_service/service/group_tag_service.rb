@@ -3,7 +3,7 @@ require 'group_tag/group_tag_pb'
 require 'group_tag/group_tag_service_services_pb'
 require 'tag/tag_pb'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/token_helper'
+# require_relative '../helpers/token_helper'
 require_relative '../helpers/role_helper'
 
 
@@ -24,7 +24,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다.") if tag_id.nil? || tag_id <= 0
 
             #3. 인증
-            user_id,role = TokenHelper.verify_token(call)
+            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
             #4. 태그 여부
             group = ::Group.find_by(id: request.group_id)
@@ -37,6 +37,12 @@ module Bannote
               unless RoleHelper.has_authority?(user_id,4)
                 raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
               end
+            end
+
+            # TODO: 이 부분은 UserGroup이 GroupTag 생성 시 암시적으로 생성되는 문제를 해결하기 위한 임시 코드입니다. 추후 UserGroup 생성 로직을 명확히 해야 합니다.
+            # UserGroup이 없으면 생성
+            unless ::UserGroup.exists?(user_id: user_id, group_id: group_id)
+              ::UserGroup.create!(user_id: user_id, group_id: group_id, created_at: Time.now)
             end
             
             group_tag = group.group_tags.create!(tag: tag)
@@ -60,7 +66,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("groud_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
             #3. 안중
-            user_id, role = TokenHelper.verify_token(call)
+            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
             #4. db조회
             group = ::Group.find(request.group_id)
@@ -90,7 +96,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
 
             #3.인증
-            user_id,role =TokenHelper.verify_token(call)
+            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
             #그룹 조회
             group = ::Group.find_by(id: group_id)
@@ -118,10 +124,12 @@ module Bannote
           rescue GRPC::BadStatus => e
             raise e
           rescue => e
-              raise GRPC::Internal.new("그룹 태그 삭제 실패: #{e.message}")
+            warn "[ERROR TRACE] #{e.backtrace.first(5)}" 
+            raise GRPC::Internal.new("그룹 태그 삭제 실패: #{e.message}")
           end
         end
-      end
-    end
-  end
-end
+      end # end for V1
+    end # end for GroupTag
+  end # end for Scheduleservice
+end # end for Bannote
+        

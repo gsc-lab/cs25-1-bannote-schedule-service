@@ -1,8 +1,5 @@
 require 'grpc'
-require 'user/user_group_pb'
-require 'user/user_group_service_services_pb'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/token_helper'
 require_relative '../helpers/role_helper'
 
 module Bannote::Scheduleservice::User::V1
@@ -12,7 +9,6 @@ module Bannote::Scheduleservice::User::V1
     def add_user_to_group(request, call)
       #1. 파싱
       
-
       user = User.find(request.user_id)
       group = Group.find(request.group_id)
 

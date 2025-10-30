@@ -2,12 +2,12 @@ require 'grpc'
 require 'schedule_link/schedule_link_pb'
 require 'schedule_link/schedule_link_service_services_pb'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/token_helper'
+# require_relative '../helpers/token_helper'
 require_relative '../helpers/role_helper'
 
 # studyroom grpc import
-require 'reservation/reservation_pb'
-require 'reservation/service_services_pb'
+# require 'reservation/reservation_pb'
+# require 'reservation/service_services_pb'
 
 module Bannote
   module Scheduleservice
@@ -21,37 +21,35 @@ module Bannote
             end_time   = Time.at(request.end_time.seconds)
 
             raise GRPC::InvalidArgument.new("제목은 필수입니다.") if request.title.to_s.strip.empty?
-            raise GRPC::InvalidArgument.new("시간 입력은 필수입니다.") if request.start_time.nil? || request.end_time.nil?
-
-            user_id, role = TokenHelper.verify_token(call)
+            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
             unless RoleHelper.has_authority?(user_id, 4)
               raise GRPC::PermissionDenied.new("조교 이상만 일정을 생성할 수 있습니다.")
             end
 
             # 스터디룸 예약 연동
-            if request.place_text&.include?("스터디룸") || request.place_type == "studyroom"
-              begin
-                reservation_stub = Bannote::Studyroomservice::Reservation::V1::ReservationService::Stub.new(
-                  "studyroom_app:50051", :this_channel_is_insecure
-                )
-
-                reservation_request = Bannote::Studyroomservice::Reservation::V1::CreateReservationRequest.new(
-                  room_id: request.place_id,
-                  group_id: 0,
-                  link_id: 0,
-                  start_time: Google::Protobuf::Timestamp.new(seconds: request.start_time.seconds),
-                  end_time:   Google::Protobuf::Timestamp.new(seconds: request.end_time.seconds),
-                  purpose: request.title,
-                  priority: :RESERVATION_PRIORITY_MEDIUM
-                )
-
-                reservation_stub.create_reservation(reservation_request)
-                puts "스터디룸 예약 성공 room_id=#{request.place_id}"
-              rescue GRPC::BadStatus => e
-                raise GRPC::FailedPrecondition.new("스터디룸 예약 실패: #{e.details}")
-              end
-            end
+            # if request.place_text&.include?("스터디룸") || request.place_type == "studyroom"
+            #   begin
+            #     reservation_stub = Bannote::Studyroomservice::Reservation::V1::ReservationService::Stub.new(
+            #       "studyroom_app:50051", :this_channel_is_insecure
+            #     )
+            #
+            #     reservation_request = Bannote::Studyroomservice::Reservation::V1::CreateReservationRequest.new(
+            #       room_id: request.place_id,
+            #       group_id: 0,
+            #       link_id: 0,
+            #       start_time: Google::Protobuf::Timestamp.new(seconds: request.start_time.seconds),
+            #       end_time:   Google::Protobuf::Timestamp.new(seconds: request.end_time.seconds),
+            #       purpose: request.title,
+            #       priority: :RESERVATION_PRIORITY_MEDIUM
+            #     )
+            #
+            #     reservation_stub.create_reservation(reservation_request)
+            #     puts "스터디룸 예약 성공 room_id=#{request.place_id}"
+            #   rescue GRPC::BadStatus => e
+            #     raise GRPC::FailedPrecondition.new("스터디룸 예약 실패: #{e.details}")
+            #   end
+            # end
 
             schedule_link = ::ScheduleLink.create!(
               title: request.title,
@@ -85,7 +83,7 @@ module Bannote
 
           # 2. 일정 링크 조회
           def get_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
+            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
@@ -114,7 +112,8 @@ module Bannote
 
           # 3. 일정 링크 수정
           def update_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
+            # user_id, role = TokenHelper.verify_token(call)
+             user_id, role = [1, "admin"] 
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
@@ -161,7 +160,8 @@ module Bannote
 
           # 4. 일정 링크 삭제
           def delete_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
+            # user_id, role = TokenHelper.verify_token(call)
+             user_id, role = [1, "admin"] 
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)

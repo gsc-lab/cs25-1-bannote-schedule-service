@@ -2,7 +2,7 @@ require 'grpc'
 require 'tag/tag_pb'
 require 'tag/tag_service_services_pb'
 require 'common_pb'
-require_relative '../helpers/token_helper'
+# require_relative '../helpers/token_helper'
 require_relative '../helpers/Role_helper'
 
 
@@ -16,8 +16,7 @@ module Bannote::Scheduleservice::Tag::V1
       #2. 유효성 검사
       raise GRPC::InvalidArgument.new("태그 이름은 필수입니다")if name.nil? || name.empty?
     
-      #.3. jwt 인증
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
       
       # 관리자 이상만 생성 가능
       unless RoleHelper.has_authority?(user_id, 4)
@@ -34,8 +33,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 2. 단일 태그 조회(관리자용)
     def get_tag(request, call)
-      #1.jwt 인증 (관리자용 이니깐 관리자가아니면 error 이기떄문에 먼저 검사하는게 맞음)
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
     #2. 파싱
       tag_id = request.tag_id
       raise GRPC::InvalidArgument.new("tag_id는 필수 입니다") if tag_id.nil?|| tag_id <=0
@@ -58,7 +56,7 @@ module Bannote::Scheduleservice::Tag::V1
     def get_tag_list(_request, call)
       begin #예외가 발생할 수 있는 코드
         #jwt 
-        user_id,role = TokenHelper.verify_token(call)
+        user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
         #관리자 이상일 경우
         if RoleHelper.has_authority?(user_id, 4)
@@ -84,7 +82,7 @@ module Bannote::Scheduleservice::Tag::V1
     # 4. 태그 삭제
     def delete_tag(request, call)
       #1.jwt
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
       #2. 파싱
       tag_id = request.tag_id

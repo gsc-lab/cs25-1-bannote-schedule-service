@@ -1,6 +1,6 @@
 require 'grpc'
 require 'role/role_pb'
-require 'role/role_service_services_pb'
+require 'role/service_services_pb'
 
 module RoleHelper
     USER_SERVICE_ADDRESS = "user_service:55052"

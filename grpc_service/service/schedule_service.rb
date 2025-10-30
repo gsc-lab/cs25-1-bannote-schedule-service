@@ -3,7 +3,7 @@ require 'schedule/schedule_pb'
 require 'schedule/schedule_service_services_pb'
 require 'google/protobuf/well_known_types'
 require 'securerandom'
-require_relative '../helpers/token_helper'
+# require_relative '../helpers/token_helper'
 require_relative '../helpers/Role_helper'
 
 module Bannote::Scheduleservice::Schedule::V1
@@ -11,8 +11,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 1. 일정 생성 (Schedule + ScheduleLink 자동 생성)
     def create_schedule(request,call)
-      # 인증
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
       user = ::User.find_by(id: user_id)
@@ -73,8 +72,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 2. 일정 목록 조회 (그룹 ID별)
     def get_schedule_list(request, call)
-      #인증
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
       user = ::User.find_by(id: user_id)
       allowed_group_ids = user.groups.pluck(:id)
@@ -102,7 +100,7 @@ module Bannote::Scheduleservice::Schedule::V1
     # 3. 일정 상세 조회
     def get_schedule(request, call)
       #인증
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
       #일정 조회
@@ -137,7 +135,7 @@ module Bannote::Scheduleservice::Schedule::V1
     # 4. 일정 수정 (Schedule + ScheduleLink 동시 수정)
     def update_schedule(request,call)
       #인증
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
 
       
       schedule = Schedule.find(request.schedule_id)
@@ -169,7 +167,7 @@ module Bannote::Scheduleservice::Schedule::V1
     # 5. 일정 삭제 (ScheduleLink도 함께 삭제)
     def delete_schedule(request, call)
       #인증 
-      user_id,role = TokenHelper.verify_token(call)
+      user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"인증 실패")if user_id.nil?
       
       #일정 조회

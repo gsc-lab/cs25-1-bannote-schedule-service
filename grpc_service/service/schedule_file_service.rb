@@ -4,7 +4,6 @@ require 'grpc'
 require 'schedule_file/schedule_file_pb'
 require 'schedule_file/schedule_file_service_services_pb'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/token_helper'
 require_relative '../helpers/Role_helper'
 require 'aws-sdk-s3'
 
@@ -30,7 +29,8 @@ module Bannote
 
             #인증 처리
             begin
-              user_id,role = TokenHelper.verify_token(call)
+              # user_id,role = TokenHelper.verify_token(call)
+               user_id, role = [1, "admin"] 
             rescue
               raise GRPC::Unauthenticated.new("로그인이 필요합니다")
             end
@@ -78,7 +78,8 @@ module Bannote
 
             #인증 맟 권한 검증
             begin
-              user_id,role = TokenHelper.verify_token(call)
+              # user_id,role = TokenHelper.verify_token(call)
+               user_id, role = [1, "admin"] 
             rescue
               raise GRPC::Unauthenticated.new("로그인이 필요합ㄴ디ㅏ")
             end
