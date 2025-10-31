@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_30_141618) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_31_171231) do
   create_table "group_permissions", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.string "permission", null: false
     t.datetime "created_at"
@@ -20,8 +20,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_30_141618) do
   create_table "group_tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
     t.bigint "group_id", null: false
     t.bigint "tag_id", null: false
-    t.datetime "created_at", precision: nil
-    t.datetime "updated_at", precision: nil
   end
 
   create_table "group_updates", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
@@ -30,7 +28,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_30_141618) do
   end
 
   create_table "groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.integer "group_type", default: 1, null: false
+    t.integer "group_type_id", default: 1, null: false
     t.bigint "department_id"
     t.string "group_name", limit: 100, null: false
     t.string "group_description", limit: 500
@@ -86,16 +84,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_30_141618) do
   end
 
   create_table "tags", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
+    t.string "name", limit: 50, null: false
     t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "name"
+    t.integer "created_by", null: false
   end
 
   create_table "user_groups", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|
-    t.bigint "group_id"
-    t.datetime "created_at", precision: nil
-    t.bigint "user_id"
+    t.bigint "group_id", null: false
+    t.datetime "created_at", null: false
     t.datetime "updated_at"
+    t.bigint "user_id"
   end
 
   create_table "users", charset: "utf8mb4", collation: "utf8mb4_0900_ai_ci", force: :cascade do |t|

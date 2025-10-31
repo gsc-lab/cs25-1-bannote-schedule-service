@@ -44,16 +44,11 @@ services:
       - "55005:55005"
     environment:
       RAILS_ENV: development
-      DATABASE_HOST: host.docker.internal
-      DATABASE_PORT: 3310
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
       DATABASE_USER: MJ
       DATABASE_PASSWORD: MJ12
       DATABASE_NAME: ban_note_development
-      # DATABASE_HOST: mysql
-      # DATABASE_PORT: 3306
-      # DATABASE_USER: MJ
-      # DATABASE_PASSWORD: MJ12
-      # DATABASE_NAME: ban_note_development
       SECRET_KEY_BASE: aa91a6702241a3e22ed4b5f13353ab2ab9ff98949660dcb0a9b2e8150092ab2c6a4a766a2c820ab7bf0218d7deb894ccec222451a4f137532e43d501d2d24154
     volumes:
       - .:/rails
