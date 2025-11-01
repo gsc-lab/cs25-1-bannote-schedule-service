@@ -3,7 +3,6 @@ require 'group_tag/group_tag_pb'
 require 'group_tag/group_tag_service_services_pb'
 require 'tag/tag_pb'
 require 'google/protobuf/well_known_types'
-# require_relative '../helpers/token_helper'
 require_relative '../helpers/role_helper'
 
 
@@ -128,8 +127,8 @@ module Bannote
             raise GRPC::Internal.new("그룹 태그 삭제 실패: #{e.message}")
           end
         end
-      end # end for V1
-    end # end for GroupTag
-  end # end for Scheduleservice
-end # end for Bannote
+      end 
+    end 
+  end 
+end 
         
