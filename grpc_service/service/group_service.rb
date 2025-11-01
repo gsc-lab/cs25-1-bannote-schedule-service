@@ -15,7 +15,7 @@ module Bannote
         #  새로운 package 이름에 맞는 클래스 상속
         class GroupServiceHandler < Bannote::Scheduleservice::Group::V1::GroupService::Service
                     # 1. 그룹 생성
-              def create_group(request, call)
+            def create_group(request, call)
               #1. 요청 파싱 시작
                 group_type_id = request.group_type_id
                 group_name = request.group_name
@@ -31,22 +31,22 @@ module Bannote
                 raise GRPC::InvalidArgument.new("group_name은 필수입니다") if group_name.blank?
                 raise GRPC::InvalidArgument.new("group_name은 50자 미만으로 해주세요") if group_name.length > 50
                 raise GRPC::InvalidArgument.new("group_type_id는 필수입니다") if group_type_id.nil?
-    
+                
                 if is_published && !is_public # 그룹 검색할떄 false이면 공개 x
                   puts "비공개 그룹이 발행되었습니다. 공개목록에는 표시되지않습니다"
                 end
     
                 #group_permission 존재 확인 (예약 우선순위 연결)
-                group_permission_id = request.group_type_id
-                permission = ::GroupPermission.find_by(id: group_permission_id)
-    
+                permission = ::GroupPermission.find_by(id: group_type_id)
+                raise GRPC::InvalidArgument.new("유효하지 않은 예약 우선순위입니다.") if permission.nil?
+
                 #3. 인증
                 # user_id,role = TokenHelper.verify_token(call)
                 user_id, role = [1, "admin"]
     
                 #4.그룹 생성
                   group = ::Group.create!(
-                    group_type_id: request.group_type_id,
+                    group_type_id: group_type_id,
                     group_name: request.group_name,
                     group_description: request.group_description,
                     is_public: request.is_public,
@@ -58,8 +58,7 @@ module Bannote
                   )
                   puts "그룹 생성 Group #{group.id}"
     
-                    group.save!
-    
+                
                   #생성자를 해당 그룹의 맴버로 자동 등록
                 #::UserGroup.create!(user_id: user_id, group_id: group.id) 나중에 이거를 주석 해제해야함
                   ::UserGroup.create!(user_id: user_id, group_id: group.id, created_at: Time.current) #이거 나중에 삭제해야함
@@ -69,9 +68,10 @@ module Bannote
 
                   # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
                   if request.tag_ids && !request.tag_ids.empty?
+                    tag_ids = request.tag_ids.to_a.map!(&:to_i)
                     puts " Processing tag_ids: #{request.tag_ids.join(', ')}"
                     puts "DEBUG: request.tag_ids: #{request.tag_ids.inspect}, type: #{request.tag_ids.class}"
-                    existing_tags = ::Tag.where(id: request.tag_ids)
+                    existing_tags = ::Tag.where(id: tag_ids)
                     puts "DEBUG: existing_tags: #{existing_tags.inspect}, length: #{existing_tags.length}"
                     if existing_tags.length != request.tag_ids.length
                       missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
@@ -90,7 +90,6 @@ module Bannote
                         ::GroupTag.create!(
                           group_id: group.id,
                           tag_id: tag_id,
-                          created_at: Time.current
                         )
                       end
                     end
@@ -149,9 +148,13 @@ module Bannote
             end
             
             # 4. 추가 필터 
-            groups = groups.where(group_type: group_type_id) if group_type_id
+            groups = groups.where(group_type_id: group_type_id) if group_type_id
             groups = groups.where(is_published: is_published) if request.has_is_published?
 
+            # 태그 필터 추가
+            if tag_ids.any?
+              groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
+            end
             #5. 응답 생성
             responses = groups.map { |g| build_group_response(g)}
             Bannote::Scheduleservice::Group::V1::GroupListResponse.new(groups: responses)
