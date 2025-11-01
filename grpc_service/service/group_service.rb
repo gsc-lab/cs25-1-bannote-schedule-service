@@ -116,10 +116,11 @@ module Bannote
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, call)
             #1. 요청 파싱 
-            group_type_id = request.group_type_id if request.has_group_type_id? #has 는 option일떄만 붙임 
-            is_public =  request.is_public if request.has_is_public? 
+            group_type_id = request.group_type_id.to_i if request.has_group_type_id?
+            is_public = request.is_public if request.has_is_public?
             is_published = request.is_published if request.has_is_published?
-            tag_ids = request.tag_ids  #repeated는 그대로 사용해도 됨(배열 형태)
+            tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
+
 
             #2.유효성 검사
             if request.has_group_type_id? 
@@ -155,6 +156,9 @@ module Bannote
             if tag_ids.any?
               groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
             end
+            
+            puts "=== [DEBUG] 최종 SQL ==="
+            puts groups.to_sql  
             #5. 응답 생성
             responses = groups.map { |g| build_group_response(g)}
             Bannote::Scheduleservice::Group::V1::GroupListResponse.new(groups: responses)
@@ -196,24 +200,23 @@ module Bannote
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
 
-            #4. 권한 검증
+          # 4. 권한 검증
             permission_label = group.group_permission&.permission
             case permission_label
-            when "우선1"
-              # 조교 이상만 수정 가능
+            when "1", "2"
+              # 긴급·정규 그룹 → 조교 이상만 수정 가능
               unless RoleHelper.has_authority?(user_id, 4)
-                raise GRPC::PermissionDenied.new("우선1 그룹은 조교 이상만 수정할 수 있습니다.")
+                raise GRPC::PermissionDenied.new("긴급/정규 그룹은 조교 이상만 수정할 수 있습니다.")
               end
-            when "우선2", "우선3"
-              # 그룹 구성원이면 수정 가능
+            when "3"
+              # 개인 그룹 → 구성원만 수정 가능
               member_ids = group.user_groups.pluck(:user_id)
               unless member_ids.include?(user_id)
                 raise GRPC::PermissionDenied.new("이 그룹의 구성원이 아닙니다.")
               end
             else
-              raise GRPC::InvalidArgument.new("유효하지 않은 group_permission 값입니다.")
+              raise GRPC::InvalidArgument.new("유효하지 않은 권한 값입니다.")
             end
-
            #5. 수정 필드
             update_attrs = {}
             #optional은 그 필드 자체를 보낼지 말지 선택할 수 있다
@@ -228,14 +231,18 @@ module Bannote
 
             # 6. 태그 수정 (전체 갱신 방식)
             if request.tag_ids && !request.tag_ids.empty?
-              existing_tags = ::Tag.where(id: request.tag_ids)
-              if existing_tags.size != request.tag_ids.size
-                missing = request.tag_ids - existing_tags.pluck(:id)
+              tag_ids = request.tag_ids.map(&:to_i)
+              existing_tags = ::Tag.where(id: tag_ids)
+              db_tag_ids = existing_tags.pluck(:id).map(&:to_i)
+              missing = tag_ids - db_tag_ids
+
+              if missing.any?
                 raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing.join(', ')}")
               end
+
               group.tags = existing_tags
             end
-
+          
            # 7. 응답 반환
             Bannote::Scheduleservice::Group::V1::UpdateGroupResponse.new(
               group: build_group_response(group.reload)
@@ -268,7 +275,6 @@ module Bannote
               raise GRPC::PermissionDenied.new("이 그룹의 생성자만 삭제 할 수 있습니다")
             end
             
-
             #6.삭제 수행
             group.destroy!
             puts "그룹 삭제 완료 ID=#{group.id}, by user_id=#{user_id}"
