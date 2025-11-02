@@ -5,3 +5,6 @@
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
+
+
+bin/* text eol=lf
