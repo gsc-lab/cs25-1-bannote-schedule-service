@@ -11,6 +11,7 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 1. 태그 생성
     def create_tag(request, call)
+
       #1.파싱 
       name = request.name&.strip
       #2. 유효성 검사
@@ -24,7 +25,7 @@ module Bannote::Scheduleservice::Tag::V1
       end
 
       #5.생성
-      tag = ::Tag.create!( name: request.name )
+      tag = ::Tag.create!( name: request.name ,created_by: user_id)
       #6. 응답 반환
       Bannote::Scheduleservice::Tag::V1::CreateTagResponse.new(tag: build_tag_response(tag))
     rescue => e
@@ -71,9 +72,11 @@ module Bannote::Scheduleservice::Tag::V1
       end
 
       #응답 
-      Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
+      Bannote::Scheduleservice::Tag::V1::GetTagListResponse.new(
+      tag_list_response: Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
         tags: tags.map { |t| build_tag_response(t) }
       )
+    )
       
     rescue => e
       raise GRPC::Internal.new("태그 목록 조회 실패: #{e.message}")
@@ -89,19 +92,15 @@ module Bannote::Scheduleservice::Tag::V1
       raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
 
       #3. 권한검사
-      unless %w[assistant professor admin].include?(role)
-        raise GRPC::PermissionDenied.new("태그 삭제는 조교이상 권한있습니다")
+      unless RoleHelper.has_authority?(user_id,4)
+        raise GRPC::PermissionDenied.new("삭제할 태그를 찾을 수 있습니다")
       end
 
-      #4.db
-      tag = ::Tag.find_by(id: request.tag_id)
+      tag = ::Tag.find_by(id: tag_id)
+      raise GRPC::NotFound.new("삭제할 태그를 찾을 수 없습니다.") unless tag
 
-      if tag
-        tag.destroy
+      tag.destroy
         Bannote::Scheduleservice::Tag::V1::DeleteTagResponse.new(success: true)
-      else
-        raise GRPC::NotFound.new("삭제할 태그를 찾을 수 없습니다.")
-      end
       
     rescue => e
       raise GRPC::Internal.new("태그 삭제 실패: #{e.message}")
@@ -111,10 +110,14 @@ module Bannote::Scheduleservice::Tag::V1
 
     # ActiveRecord::Tag 모델을 Grpc::Tag::TagResponse 메시지로 변환
     def build_tag_response(tag)
+      created_at_ts = Google::Protobuf::Timestamp.new
+      created_at_ts.from_time(tag.created_at)if tag.created_at
+
       Bannote::Scheduleservice::Tag::V1::Tag.new(
-        tag_id: tag.id,
-        name: tag.name,
-        created_at: Google::Protobuf::Timestamp.new(seconds: tag.created_at.to_i)
+        tag_id: tag.id.to_i,
+        name: tag.name.to_s,
+        created_by: tag.created_by.to_i,
+        created_at: created_at_ts
       )
     end
   end
