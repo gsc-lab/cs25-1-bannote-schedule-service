@@ -2,8 +2,7 @@ require 'grpc'
 require 'schedule_link/schedule_link_pb'
 require 'schedule_link/schedule_link_service_services_pb'
 require 'google/protobuf/well_known_types'
-# require_relative '../helpers/token_helper'
-require_relative '../helpers/role_helper'
+require_relative '../helpers/Role_helper'
 
 # studyroom grpc import
 # require 'reservation/reservation_pb'

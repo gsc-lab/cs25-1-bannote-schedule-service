@@ -1,6 +1,6 @@
 require 'grpc'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/role_helper'
+require_relative '../helpers/Role_helper'
 
 module Bannote::Scheduleservice::User::V1
   class UserGroupServiceHandler < Bannote::Scheduleservice::User::V1::UserGroupService::Service
