@@ -20,6 +20,7 @@ module Bannote
              #1. 파싱
             file_id = request.file_id
             raise GRPC::InvalidArgument.new("file_id는 필수 입니다")if file_id.nil? || file_id <= 0
+            
             # 파일 조회
             file = ::ScheduleFile.find(request.file_id)
             raise GRPC::InvalidArgument.new("scheuleLink가 존재 하지않습니디ㅏ")if file.schedule_link_id.nil?
@@ -38,8 +39,9 @@ module Bannote
            # 그룹 소속 여부확인
            group = schedule_link.group
            raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다")if group.nil?
+            #그룹에 속하는지 않하는지 여부
+           is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id) # 위에 group에서 가져왔기떄문에 그대로 . 해서 사용가능
 
-           is_member = ::UserGroup.exists?(user_id: user_id, group_id: group_id)
            unless is_member
             raise  GRPC::PermissionDenied.new("이 그룹에 속하지 않아 파일을 조회할 수 없습니다.")
            end
@@ -92,18 +94,33 @@ module Bannote
             raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다.") if group.nil?
 
             
-
-            
-
             #권한 검증
+            case group.group_type_id
+            when 1,2
+              unless RoleHelper.has_authority?(user_id,4)
+                raise GRPC::PermissionDenied.new("정규 수업 그룹의 파일은 조교 이상만 삭제 할 수 있습니다")
+              end
             
+            else
+
+              #개인 그룹은 해당 그룹에 속해있는 맴버면 삭제가능
+              is_member = ::UserGroup.exists?(user_id: user_id,group_id: group.id)
+              unless is_member
+                raise GRPC::PermissionDenied.new("이 그룹에 속하지 않아 파일을 삭제 할 수 없습니다")
+              end
+
+              #스케줄 링크 가지고있는지 확인
+              unless schedule_link.present? && schedule_link.group_id == group.id
+                raise GRPC::PermissionDenied.new("이 파일은 해당 그룹의 스케줄과 연결되어 있지 않습니다")
+              end
+            end
 
             #MinIo객체 삭제
 
 
             #db레코드 삭제
 
-            file.destroy
+            file.destroy!
             #응답
             Bannote::Scheduleservice::ScheduleFile::V1::DeleteScheduleFileResponse.new(success: true)
 
