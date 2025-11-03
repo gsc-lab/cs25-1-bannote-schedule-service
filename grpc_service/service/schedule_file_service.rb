@@ -90,6 +90,9 @@ module Bannote
 
             group = schedule_link.group
             raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다.") if group.nil?
+
+            
+
             
 
             #권한 검증

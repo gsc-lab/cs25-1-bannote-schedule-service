@@ -47,12 +47,11 @@ end
 
 # 5. gRPC 서버 실행
 def main
+  port = ENV.fetch('GRPC_PORT', '55005')
   server = GRPC::RpcServer.new
-  server.add_http2_port('0.0.0.0:55005', :this_port_is_insecure)
+  server.add_http2_port("0.0.0.0:#{port}", :this_port_is_insecure)
 
-  puts " gRPC 서버가 55005 포트에서 실행 중입니다..."
-
-  # 서비스 등록 grpc서버 요청 진입점
+  #  서비스 등록 (run_till_terminated 이전에 해야 함)
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::GroupTag::V1::GroupTagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Tag::V1::TagServiceHandler.new)
@@ -62,8 +61,9 @@ def main
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
   server.handle(Grpc::Health::V1::HealthServiceHandler)
 
+  puts "gRPC 서버가 #{port} 포트에서 실행 중입니다..."
 
-
+  #  서버 실행 (등록된 서비스 포함)
   server.run_till_terminated_or_interrupted(['INT', 'TERM'])
   puts "서버가 종료되었습니다."
 end
