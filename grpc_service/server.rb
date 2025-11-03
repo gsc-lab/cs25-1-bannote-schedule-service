@@ -38,6 +38,7 @@ require_relative 'service/tag_service'
 require_relative 'service/schedule_service'
 require_relative 'service/schedule_link_service'
 require_relative 'service/schedule_file_service'
+require_relative './health_check_service'
 
 module Bannote
   module Scheduleservice
@@ -59,6 +60,7 @@ def main
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
+  server.handle(Grpc::Health::V1::HealthServiceHandler)
 
 
 
