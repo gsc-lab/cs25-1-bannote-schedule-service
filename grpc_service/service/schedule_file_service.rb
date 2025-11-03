@@ -90,18 +90,10 @@ module Bannote
 
             group = schedule_link.group
             raise GRPC::NotFound.new("해당 일정이 속한 그룹을 찾을 수 없습니다.") if group.nil?
+            
 
             #권한 검증
-            if group.group_type_id == 1
-              unless RoleHelper.has_authority?(user_id, 4)
-                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 파일을 삭제할 수 있습니다.")
-              end
-            else
-              # 개인 그룹 → 생성자만 삭제 가능
-              unless file.created_by == user_id
-                raise GRPC::PermissionDenied.new("개인 그룹 파일은 생성자만 삭제할 수 있습니다.")
-              end
-            end
+            
 
             #MinIo객체 삭제
 

@@ -17,7 +17,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Set production environment
-ENV RAILS_ENV="production" \
+ENV RAILS_ENV="development" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development"
@@ -80,7 +80,7 @@ COPY --from=build "${BUNDLE_PATH}" "${BUNDLE_PATH}"
 COPY --from=build /rails /rails
 
 # --------------------------------------------------------
-# ✅ 안전하게 rails 유저/그룹 생성 (충돌 방지 + 디렉토리 보장)
+# 안전하게 rails 유저/그룹 생성 (충돌 방지 + 디렉토리 보장)
 # --------------------------------------------------------
 RUN if ! getent group rails; then groupadd --system --gid 1000 rails; fi && \
     if ! id rails >/dev/null 2>&1; then useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash rails; fi && \

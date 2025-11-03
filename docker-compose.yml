@@ -114,8 +114,7 @@ services:
       DB_USERNAME: "MJ"
       DB_PASSWORD: "MJ12"
       DB_NAME: "ban_note_development"
-
-      SECRET_KEY_BASE: aa91a6702241a3e22ed4b5f13353ab2ab9ff98949660dcb0a9b2e8150092ab2c6a4a766a2c820ab7bf0218d7deb894ccec222451a4f137532e43d501d2d24154
+      # SECRET_KEY_BASE: aa91a6702241a3e22ed4b5f13353ab2ab9ff98949660dcb0a9b2e8150092ab2c6a4a766a2c820ab7bf0218d7deb894ccec222451a4f137532e43d501d2d24154
     volumes:
       - .:/rails
     command: bundle exec ruby grpc_service/server.rb
