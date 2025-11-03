@@ -91,5 +91,5 @@ USER rails
 
 # Entrypoint & command
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
-EXPOSE 80
-CMD ["./bin/thrust", "./bin/rails", "server"]
+EXPOSE 55005
+CMD ["bundle", "exec", "ruby", "grpc_service/server.rb"]
