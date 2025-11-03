@@ -3,7 +3,7 @@ require 'group_tag/group_tag_pb'
 require 'group_tag/group_tag_service_services_pb'
 require 'tag/tag_pb'
 require 'google/protobuf/well_known_types'
-require_relative '../helpers/role_helper'
+require_relative '../helpers/Role_helper'
 
 
 module Bannote
