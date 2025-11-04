@@ -198,7 +198,7 @@ services:
       - "55005:55005"
     environment:
       RAILS_ENV: development
-      GRPC_PORT: "55005"
+      GRPC_PORT: "9090"
       DB_HOST: "mysql-db"
       DB_PORT: "3306"
       DB_USERNAME: "MJ"

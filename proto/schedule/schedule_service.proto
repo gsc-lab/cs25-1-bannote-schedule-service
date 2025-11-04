@@ -24,8 +24,18 @@ message CreateScheduleRequest {
   google.protobuf.Timestamp start_date = 4;
   google.protobuf.Timestamp end_date = 5;
   int64 created_by = 6;
+  ScheduleLinkData link = 7;
 }
 
+message ScheduleLinkData {
+  string title = 1;
+  optional int64 place_id = 2;
+  optional string place_text = 3;
+  string description = 4;
+  google.protobuf.Timestamp start_time = 5;
+  google.protobuf.Timestamp end_time = 6;
+  bool is_allday = 7;
+}
 message GetScheduleListRequest {
   repeated int64 group_ids = 1;
   optional google.protobuf.Timestamp start_date = 2;

@@ -38,7 +38,8 @@ require_relative 'service/tag_service'
 require_relative 'service/schedule_service'
 require_relative 'service/schedule_link_service'
 require_relative 'service/schedule_file_service'
-require_relative './health_check_service'
+
+require_relative './health_check_service' 
 
 module Bannote
   module Scheduleservice

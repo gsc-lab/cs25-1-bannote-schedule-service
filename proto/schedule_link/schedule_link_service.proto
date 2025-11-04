@@ -25,6 +25,7 @@ message CreateScheduleLinkRequest {
   google.protobuf.Timestamp start_time = 6;
   google.protobuf.Timestamp end_time = 7;
   bool is_allday = 8;
+  int64 created_by = 9;
 }
 
 message GetScheduleLinkRequest {
