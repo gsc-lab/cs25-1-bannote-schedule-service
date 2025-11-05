@@ -2,10 +2,24 @@ default: &default
   adapter: mysql2
   encoding: utf8mb4
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: <%= ENV['DB_USERNAME'] %>
-  password: <%= ENV['DB_PASSWORD'] %>
-  host: <%= ENV['DB_HOST'] %>
-  port: <%= ENV['DB_PORT'] %>
+  username: <%= ENV['DB_USERNAME'] || 'MJ' %>
+  password: <%= ENV['DB_PASSWORD'] || 'MJ12' %>
+  port: <%= ENV['DB_PORT'] || 3306 %>
+  host: <%= begin
+    # 1. 쿠버네티스 환경 감지
+    if ENV['KUBERNETES_SERVICE_HOST']
+      ENV['DB_HOST'] || 'mysql-schedule-service.ban-note.svc.cluster.local'
+    # 2. Docker Compose 환경 (mysql-db 접근 가능 시)
+    else
+      begin
+        Socket.getaddrinfo('mysql-db', nil)
+        'mysql-db'
+      rescue SocketError
+        # 3. 로컬 개발 환경 (직접 실행 시)
+        ENV['DB_HOST'] || '127.0.0.1'
+      end
+    end
+  end %>
 
 development:
   <<: *default
@@ -13,10 +27,10 @@ development:
 
 test:
   <<: *default
-  database: ban_note_test
+  database: <%= ENV['DB_NAME'] || 'ban_note_test' %>
 
 production:
   <<: *default
   database: <%= ENV['DB_NAME'] || 'ban_note_production' %>
-  username: <%= ENV['DB_USERNAME'] %>
-  password: <%= ENV['DB_PASSWORD'] %>
+  username: <%= ENV['DB_USERNAME'] || 'MJ' %>
+  password: <%= ENV['DB_PASSWORD'] || 'MJ12' %>

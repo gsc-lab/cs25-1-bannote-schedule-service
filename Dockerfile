@@ -87,9 +87,15 @@ RUN if ! getent group rails; then groupadd --system --gid 1000 rails; fi && \
     mkdir -p /rails/log /rails/tmp /usr/local/bundle && \
     chown -R rails:rails /rails/log /rails/tmp /usr/local/bundle
 
+RUN chmod -R 777 /rails/db
+
 USER rails
 
 # Entrypoint & command
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 EXPOSE 55005
 CMD ["bundle", "exec", "ruby", "grpc_service/server.rb"]
+
+
+
+

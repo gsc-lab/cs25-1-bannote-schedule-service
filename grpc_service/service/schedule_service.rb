@@ -5,85 +5,15 @@ require 'google/protobuf/well_known_types'
 require 'securerandom'
 require_relative '../helpers/Role_helper'
 
+
+# #최근에 저장된 모듈scheulde을 들고오기떄문에 삭제 해주고 
+# ::Object.send(:remove_const, :Schedule) if defined?(Schedule)
 # Rails 모델을 명시적으로 alias로 등록
 AppSchedule      = ::Schedule
 AppScheduleLink  = ::ScheduleLink
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
-
-    # 1. 일정 생성 (Schedule + ScheduleLink 자동 생성)
-    # def create_schedule(request, call)
-    #   user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
-    #   raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
-
-    #   group = ::Group.find_by(id: request.group_id)
-    #   raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "그룹을 찾을 수 없습니다.") if group.nil?
-
-    #   # 권한 검증
-    #   if group.group_type_id == 1 ||group.group_type_id == 2
-    #     # 정규 수업 그룹 → 조교 이상만 가능
-    #     unless RoleHelper.has_authority?(user_id, 4)
-    #       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
-    #     end
-    #   else
-    #     # 개인/기타 그룹 → 그룹에 속한 멤버면 가능
-    #     is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
-    #     unless is_member
-    #       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 생성할 수 없습니다.")
-    #     end
-    #   end
-
-    #   # 유효성 검증
-    #   # raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "제목은 필수입니다.") if request.title.nil? || request.title.strip.empty?
-    #   raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "시간 입력은 필수입니다.") if request.start_date.nil? || request.end_date.nil?
-
-    #   start_time = Time.at(request.start_date.seconds)
-    #   end_time = Time.at(request.end_date.seconds)
-    #   raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "종료시간은 시작시간 이후여야 합니다.") if end_time <= start_time
-
-    #   ActiveRecord::Base.transaction do
-    #     #  일정 링크 생성
-    #     link_data = request.link
-
-    #     # 1-1. 일정 링크 생성
-    #     link = ScheduleLink.create!(
-    #       title: request.title,
-    #       description: request.description,
-    #       place_text: request.place_text,
-    #       start_time: start_time,
-    #       end_time: end_time,
-    #       is_allday: request.is_allday || false,
-    #       created_by: user_id
-    #     )
-
-    #     # 1-2. 일정 생성
-    #     schedule = Schedule.create!(
-    #       group_id: group.id,
-    #       schedule_link_id: link.id,
-    #       schedule_code: SecureRandom.hex(8),
-    #       color: request.is_highlighted ? "highlight" : "normal",
-    #       start_date: request.start_date,
-    #       end_date: request.end_date,
-    #       comment: request.comment,
-    #       created_by: user_id
-    #     )
-
-    #     # 응답
-    #     Schedule::ScheduleResponse.new(
-    #       schedule_id: schedule.id,
-    #       schedule_code: schedule.schedule_code,
-    #       group_id: schedule.group_id,
-    #       code: group.group_code,
-    #       schedule_link_id: schedule.schedule_link_id,
-    #       color: schedule.color,
-    #       created_by: schedule.created_by,
-    #       created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
-    #     )
-    #   end
-    # rescue => e
-    #   raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, e.message)
-    # end
     def create_schedule(request, call)
       user_id, role = [1, "admin"]
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
@@ -157,21 +87,20 @@ module Bannote::Scheduleservice::Schedule::V1
     # 2. 일정 목록 조회 (그룹 ID별)
     def get_schedule_list(request, call)
       user_id, role = [1, "admin"]
-
       user = ::User.find_by(id: user_id)
-      allowed_group_ids = user.groups.pluck(:id)
+      allowed_group_ids = user ? user.groups.pluck(:id) : []
+      #요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
       target_group_ids = request.group_ids & allowed_group_ids
-
-      schedules = Schedule.where(group_id: target_group_ids)
+      #일정 조회
+      schedules = AppSchedule.where(group_id: target_group_ids)
                           .includes(:schedule_link)
                           .order(created_at: :desc)
 
       schedule_responses = schedules.map do |s|
-        Schedule::ScheduleResponse.new(
+        Schedule.new(
           schedule_id: s.id,
           schedule_code: s.schedule_code,
           group_id: s.group_id,
-          code: s.group.group_code,
           schedule_link_id: s.schedule_link_id,
           color: s.color,
           created_by: s.created_by,
@@ -179,7 +108,11 @@ module Bannote::Scheduleservice::Schedule::V1
         )
       end
 
-      Schedule::ScheduleListResponse.new(schedules: schedule_responses)
+      GetScheduleListResponse.new(
+        schedule_list_response: ScheduleListResponse.new(
+          schedules: schedule_responses
+        )
+      )
     end
 
     # 3. 일정 상세 조회
@@ -198,7 +131,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       Schedule::ScheduleResponse.new(
         schedule_id: schedule.id,
-        schedule_code: schedule.schedule_code,
+        code: schedule.schedule_code,
         group_id: schedule.group_id,
         code: schedule.group.group_code,
         schedule_link_id: schedule.schedule_link_id,
