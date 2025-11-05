@@ -5,6 +5,10 @@ require 'google/protobuf/well_known_types'
 require 'securerandom'
 require_relative '../helpers/Role_helper'
 
+# Rails 모델을 명시적으로 alias로 등록
+AppSchedule      = ::Schedule
+AppScheduleLink  = ::ScheduleLink
+
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
 
@@ -109,7 +113,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       ActiveRecord::Base.transaction do
         # 1-1. 일정 링크 생성
-        link = ScheduleLink.create!(
+        link = ::ScheduleLink.create!(
           title: link_data.title,
           description: link_data.description,
           place_id: link_data.place_id.presence,
@@ -121,27 +125,29 @@ module Bannote::Scheduleservice::Schedule::V1
         )
 
         # 1-2. 일정 생성
-        schedule = Schedule.create!(
+        schedule = ::Schedule.create!(
           group_id: group.id,
           schedule_link_id: link.id,
           schedule_code: SecureRandom.hex(8),
           color: request.is_highlighted ? "highlight" : "normal",
-          start_date: request.start_date,
-          end_date: request.end_date,
-          comment: request.comment,
+          start_date: Time.at(request.start_date.seconds),
+          end_date: Time.at(request.end_date.seconds),
+          memo: request.comment,
           created_by: user_id
         )
 
         # 응답
-        Schedule::ScheduleResponse.new(
-          schedule_id: schedule.id,
-          schedule_code: schedule.schedule_code,
-          group_id: schedule.group_id,
-          code: group.group_code,
-          schedule_link_id: schedule.schedule_link_id,
-          color: schedule.color,
-          created_by: schedule.created_by,
-          created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
+        CreateScheduleResponse.new(
+          schedule: Schedule.new(
+            schedule_id: schedule.id,
+            code: schedule.schedule_code,
+            group_id: schedule.group_id,
+            schedule_link_id: schedule.schedule_link_id,
+            color: schedule.color,
+            comment: schedule.memo,
+            created_by: schedule.created_by,
+            created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
+          )
         )
       end
     rescue => e
@@ -221,7 +227,7 @@ module Bannote::Scheduleservice::Schedule::V1
         end
       end
 
-      link = schedule.schedule_link
+      link_data = schedule.schedule_link
       schedule.update!(
         comment: request.comment.presence || schedule.comment,
         color: request.is_highlighted ? "highlight" : "normal"

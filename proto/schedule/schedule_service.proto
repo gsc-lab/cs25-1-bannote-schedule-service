@@ -4,6 +4,7 @@ package bannote.scheduleservice.schedule.v1;
 
 import "google/protobuf/timestamp.proto";
 import "schedule/schedule.proto";
+import "common.proto";
 
 
 service ScheduleService {
