@@ -134,15 +134,16 @@ module Bannote::Scheduleservice::Schedule::V1
         raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 조회할 수 없습니다.")
       end
 
-      Schedule::ScheduleResponse.new(
-        schedule_id: schedule.id,
-        code: schedule.schedule_code,
-        group_id: schedule.group_id,
-        code: schedule.group.group_code,
-        schedule_link_id: schedule.schedule_link_id,
-        color: schedule.color,
-        created_by: schedule.created_by,
-        created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
+       Bannote::Scheduleservice::Schedule::V1::GetScheduleResponse.new(
+        schedule: Bannote::Scheduleservice::Schedule::V1::Schedule.new(
+          schedule_id: schedule.id,
+          code: schedule.schedule_code,
+          group_id: schedule.group_id,
+          schedule_link_id: schedule.schedule_link_id,
+          color: schedule.color,
+          created_by: schedule.created_by,
+          created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
+        )
       )
     end
 
