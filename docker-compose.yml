@@ -1,3 +1,98 @@
+# version: "3.9"
+
+# services:
+#   mysql-db:
+#     image: mysql:8.0
+#     container_name: mysql-db
+#     restart: always
+#     environment:
+#       MYSQL_ROOT_PASSWORD: rootpass
+#       MYSQL_DATABASE: ban_note_development
+#       MYSQL_USER: MJ
+#       MYSQL_PASSWORD: MJ12
+#     ports:
+#       - "3310:3306"
+#     volumes:
+#       - db_data:/var/lib/mysql
+#     networks:
+#       - ban_note_network
+#     healthcheck:
+#       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "MJ", "-pMJ12" ]
+#       interval: 5s
+#       timeout: 3s
+#       retries: 5
+#       start_period: 10s
+
+#   redis:
+#     image: redis:7
+#     ports:
+#       - "6379:6379"
+#     networks:
+#       - ban_note_network
+
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:7.5.0
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#       ZOOKEEPER_TICK_TIME: 2000
+#     ports:
+#       - "2181:2181"
+#     networks:
+#       - ban_note_network
+
+#   kafka:
+#     image: confluentinc/cp-kafka:7.5.0
+#     depends_on:
+#       - zookeeper
+#     ports:
+#       - "9092:9092"
+#     environment:
+#       KAFKA_BROKER_ID: 1
+#       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+#       KAFKA_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://0.0.0.0:9092
+#       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+#       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+#     networks:
+#       - ban_note_network
+
+#   app:
+#     build: .
+#     container_name: ban_note-app
+#     depends_on:
+#       mysql-db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_started
+#       kafka:
+#         condition: service_started
+#     ports:
+#       - "3000:3000"
+#       - "9090:9090"
+#       - "55005:55005"
+#     environment:
+#       RAILS_ENV: development
+#       GRPC_PORT: "9090"
+#       DB_HOST: "mysql-db"
+#       # DB_HOST: "mysql-schedule-service.ban-note.svc.cluster.local"
+#       DB_PORT: "3306"
+#       DB_USERNAME: "MJ"
+#       DB_PASSWORD: "MJ12"
+#       DB_NAME: "ban_note_development"
+#     volumes:
+#       - .:/rails
+#     command: bundle exec ruby grpc_service/server.rb
+#     networks:
+#       - ban_note_network
+
+# volumes:
+#   db_data:
+
+# networks:
+#   ban_note_network:
+#     name: ban_note_shared_network
+#     external: true
+
 version: "3.9"
 
 services:
@@ -10,6 +105,8 @@ services:
       MYSQL_DATABASE: ban_note_development
       MYSQL_USER: MJ
       MYSQL_PASSWORD: MJ12
+    command: >
+      --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --skip-character-set-client-handshake
     ports:
       - "3310:3306"
     volumes:
@@ -25,6 +122,7 @@ services:
 
   redis:
     image: redis:7
+    container_name: redis
     ports:
       - "6379:6379"
     networks:
@@ -32,6 +130,7 @@ services:
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -42,6 +141,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
     depends_on:
       - zookeeper
     ports:
@@ -70,15 +170,14 @@ services:
       - "3000:3000"
       - "9090:9090"
       - "55005:55005"
+    # 환경별 .env 자동 로드
+    env_file:
+      # - .env.${RAILS_ENV:-development}
+      - .env.production
     environment:
-      RAILS_ENV: development
-      GRPC_PORT: "9090"
-      DB_HOST: "mysql-db"
-      # DB_HOST: "mysql-schedule-service.ban-note.svc.cluster.local"
-      DB_PORT: "3306"
-      DB_USERNAME: "MJ"
-      DB_PASSWORD: "MJ12"
-      DB_NAME: "ban_note_development"
+      # RAILS_ENV: ${RAILS_ENV:-development}
+      RAILS_ENV: production
+
     volumes:
       - .:/rails
     command: bundle exec ruby grpc_service/server.rb
@@ -87,7 +186,8 @@ services:
 
 volumes:
   db_data:
-
+    external: true
+    name: ban_note_db_data
 
 networks:
   ban_note_network:

@@ -97,20 +97,25 @@ module Bannote::Scheduleservice::Schedule::V1
                           .order(created_at: :desc)
 
       schedule_responses = schedules.map do |s|
-        Schedule.new(
+        Bannote::Scheduleservice::Schedule::V1::Schedule.new(
           schedule_id: s.id,
-          schedule_code: s.schedule_code,
+          code: s.schedule_code,
           group_id: s.group_id,
           schedule_link_id: s.schedule_link_id,
+          comment: s.memo,
           color: s.color,
+          created_at: Google::Protobuf::Timestamp.new(seconds: s.created_at.to_i),
+          updated_at: s.updated_at ? Google::Protobuf::Timestamp.new(seconds: s.updated_at.to_i) : nil,
+          deleted_at: s.deleted_at ? Google::Protobuf::Timestamp.new(seconds: s.deleted_at.to_i) : nil,
           created_by: s.created_by,
-          created_at: Google::Protobuf::Timestamp.new(seconds: s.created_at.to_i)
+          updated_by: s.updated_by,
+          deleted_by: s.deleted_by
         )
       end
 
       GetScheduleListResponse.new(
-        schedule_list_response: ScheduleListResponse.new(
-          schedules: schedule_responses
+        schedule_list_response: Bannote::Scheduleservice::Schedule::V1::ScheduleListResponse.new(
+        schedules: schedule_responses
         )
       )
     end
