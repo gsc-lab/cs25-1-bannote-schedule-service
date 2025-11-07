@@ -30,8 +30,7 @@ module Bannote
 
             #인증 처리
             begin
-              # user_id,role = TokenHelper.verify_token(call)
-               user_id, role = [1, "admin"] 
+              user_id,role = TokenHelper.verify_token(call)
             rescue
               raise GRPC::Unauthenticated.new("로그인이 필요합니다")
             end
@@ -80,8 +79,7 @@ module Bannote
 
             #인증 맟 권한 검증
             begin
-              # user_id,role = TokenHelper.verify_token(call)
-               user_id, role = [1, "admin"] 
+              user_id,role = TokenHelper.verify_token(call)
             rescue
               raise GRPC::Unauthenticated.new("로그인이 필요합ㄴ디ㅏ")
             end

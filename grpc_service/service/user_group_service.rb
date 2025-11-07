@@ -8,7 +8,6 @@ module Bannote::Scheduleservice::User::V1
     # 1. 그룹에 유저 추가
     def add_user_to_group(request, call)
       #1. 파싱
-      
       user = User.find(request.user_id)
       group = Group.find(request.group_id)
 

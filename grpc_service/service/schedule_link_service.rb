@@ -20,8 +20,8 @@ module Bannote
             end_time   = Time.at(request.end_time.seconds)
 
             raise GRPC::InvalidArgument.new("제목은 필수입니다.") if request.title.to_s.strip.empty?
-            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
-
+            user_id, role = TokenHelper.verify_token(call)
+           
             unless RoleHelper.has_authority?(user_id, 4)
               raise GRPC::PermissionDenied.new("조교 이상만 일정을 생성할 수 있습니다.")
             end
@@ -82,7 +82,8 @@ module Bannote
 
           # 2. 일정 링크 조회
           def get_schedule_link(request, call)
-            user_id, role = [1, "admin"] # TokenHelper.verify_token(call)
+            user_id, role = TokenHelper.verify_token(call)
+          
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
@@ -111,8 +112,8 @@ module Bannote
 
           # 3. 일정 링크 수정
           def update_schedule_link(request, call)
-            # user_id, role = TokenHelper.verify_token(call)
-             user_id, role = [1, "admin"] 
+            user_id, role = TokenHelper.verify_token(call)
+           
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
@@ -159,8 +160,7 @@ module Bannote
 
           # 4. 일정 링크 삭제
           def delete_schedule_link(request, call)
-            # user_id, role = TokenHelper.verify_token(call)
-             user_id, role = [1, "admin"] 
+            user_id, role = TokenHelper.verify_token(call)
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)

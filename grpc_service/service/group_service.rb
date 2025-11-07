@@ -41,17 +41,7 @@ module Bannote
                 raise GRPC::InvalidArgument.new("유효하지 않은 예약 우선순위입니다.") if permission.nil?
 
                 #3. 인증
-                # user_id,role = TokenHelper.verify_token(call)
-                user_code = call.metadata["x-user-code"]
-                user_role = call.metadata["x-user-role"]
-
-                raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "x-user-code가 없습니다.") if user_code.blank?
-
-                user = ::User.find_by(user_number: user_code)
-                raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "해당 사용자를 찾을 수 없습니다.") if user.nil?
-
-                user_id = user.id
-                role = user_role
+                user_id, role = TokenHelper.verify_token(call)
                     
                 #4.그룹 생성
                   group = ::Group.create!(
@@ -136,14 +126,7 @@ module Bannote
             end
 
             # jwt인증[카프카 아직 x]
-            user_code = call.metadata["x-user-code"]
-            user_role = call.metadata["x-user-role"]
-
-            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
-            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
-            
-            user_id = user.id
-            role = user_role
+            user_id, role = TokenHelper.verify_token(call)
 
             #3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
             if request.has_is_public? && request.is_public == false
@@ -178,14 +161,7 @@ module Bannote
             group_id = request.group_id
 
             #  jwt인증
-            user_code = call.metadata["x-user-code"]
-            user_role = call.metadata["x-user-role"]
-
-            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
-            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
-            
-            user_id = user.id
-            role = user_role
+            user_id, role = TokenHelper.verify_token(call)
 
             group = ::Group.includes(:tags, :group_permission).find(group_id)
 
@@ -206,15 +182,8 @@ module Bannote
             raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
             #2. jwt인증
-            user_code = call.metadata["x-user-code"]
-            user_role = call.metadata["x-user-role"]
-
-            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
-            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
+            user_id, role = TokenHelper.verify_token(call)
             
-            user_id = user.id
-            role = user_role
-
             #3.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
@@ -236,6 +205,7 @@ module Bannote
             else
               raise GRPC::InvalidArgument.new("유효하지 않은 권한 값입니다.")
             end
+            
            #5. 수정 필드
             update_attrs = {}
             #optional은 그 필드 자체를 보낼지 말지 선택할 수 있다
@@ -250,10 +220,10 @@ module Bannote
 
             # 6. 태그 수정 (전체 갱신 방식)
             if request.tag_ids && !request.tag_ids.empty?
-              tag_ids = request.tag_ids.map(&:to_i)
-              existing_tags = ::Tag.where(id: tag_ids)
-              db_tag_ids = existing_tags.pluck(:id).map(&:to_i)
-              missing = tag_ids - db_tag_ids
+               tag_ids = request.tag_ids.map(&:to_i)
+               existing_tags = ::Tag.where(id: tag_ids)
+               db_tag_ids = existing_tags.pluck(:id).map(&:to_i)
+               missing = tag_ids - db_tag_ids
 
               if missing.any?
                 raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing.join(', ')}")
@@ -280,18 +250,13 @@ module Bannote
           def delete_group(request, call)
           #1. 파싱
             group_id = request.group_id
+            
             #2.유효성 검사
             raise GRPC::InvalidArgument.new("group_id는 필수입니다") if group_id.nil? || group_id <= 0
+
             # 3. 인증
-            user_code = call.metadata["x-user-code"]
-            user_role = call.metadata["x-user-role"]
-
-            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
-            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
-            
-            user_id = user.id
-            role = user_role
-
+            user_id, role = TokenHelper.verify_token(call)
+              
             #4.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
