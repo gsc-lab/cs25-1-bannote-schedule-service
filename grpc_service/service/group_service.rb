@@ -42,8 +42,17 @@ module Bannote
 
                 #3. 인증
                 # user_id,role = TokenHelper.verify_token(call)
-                user_id, role = [1, "admin"]
-    
+                user_code = call.metadata["x-user-code"]
+                user_role = call.metadata["x-user-role"]
+
+                raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "x-user-code가 없습니다.") if user_code.blank?
+
+                user = ::User.find_by(user_number: user_code)
+                raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "해당 사용자를 찾을 수 없습니다.") if user.nil?
+
+                user_id = user.id
+                role = user_role
+                    
                 #4.그룹 생성
                   group = ::Group.create!(
                     group_type_id: group_type_id,
@@ -96,16 +105,7 @@ module Bannote
     
                   # 6.응답생성
                 Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
-                end # <--- This end closes the 'if request.tag_ids' block. This was missing.
-    
-              # rescue ActiveRecord::RecordInvalid => e
-              #   puts "Validation error: #{e.record.class} - #{e.record.errors.full_messages.join(', ')}"
-              #   raise GRPC::InvalidArgument.new("그룹 생성 중 오류: #{e.message}")
-              # rescue => e
-              #   puts "Generic error in create_group: #{e.class} - #{e.message}"
-              #   puts e.backtrace.first(5)
-              #   raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
-              # end
+                end
             rescue GRPC::BadStatus => e
               raise e  # 원래의 gRPC 에러 그대로 전달
             rescue ActiveRecord::RecordInvalid => e
@@ -136,7 +136,14 @@ module Bannote
             end
 
             # jwt인증[카프카 아직 x]
-            user_id, role = [1, "admin"]
+            user_code = call.metadata["x-user-code"]
+            user_role = call.metadata["x-user-role"]
+
+            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
+            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
+            
+            user_id = user.id
+            role = user_role
 
             #3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
             if request.has_is_public? && request.is_public == false
@@ -157,8 +164,6 @@ module Bannote
               groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
             end
             
-            puts "=== [DEBUG] 최종 SQL ==="
-            puts groups.to_sql  
             #5. 응답 생성
             responses = groups.map { |g| build_group_response(g)}
             Bannote::Scheduleservice::Group::V1::GroupListResponse.new(groups: responses)
@@ -173,7 +178,14 @@ module Bannote
             group_id = request.group_id
 
             #  jwt인증
-            user_id, role = [1, "admin"]
+            user_code = call.metadata["x-user-code"]
+            user_role = call.metadata["x-user-role"]
+
+            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
+            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
+            
+            user_id = user.id
+            role = user_role
 
             group = ::Group.includes(:tags, :group_permission).find(group_id)
 
@@ -194,7 +206,14 @@ module Bannote
             raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
             #2. jwt인증
-            user_id, role = [1, "admin"]
+            user_code = call.metadata["x-user-code"]
+            user_role = call.metadata["x-user-role"]
+
+            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
+            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
+            
+            user_id = user.id
+            role = user_role
 
             #3.그룹 조회
             group = ::Group.find_by(id: group_id)
@@ -264,7 +283,14 @@ module Bannote
             #2.유효성 검사
             raise GRPC::InvalidArgument.new("group_id는 필수입니다") if group_id.nil? || group_id <= 0
             # 3. 인증
-            user_id, role = [1, "admin"]
+            user_code = call.metadata["x-user-code"]
+            user_role = call.metadata["x-user-role"]
+
+            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED,"x-user-code가 누락되었습니다.") if user_code.blank?
+            user = ::User.find_by(user_number: user_code) raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"해당 사용자를 찾을 수 없습니다.") if user.nil?
+            
+            user_id = user.id
+            role = user_role
 
             #4.그룹 조회
             group = ::Group.find_by(id: group_id)
