@@ -20,7 +20,7 @@ module Bannote
             end_time   = Time.at(request.end_time.seconds)
 
             raise GRPC::InvalidArgument.new("제목은 필수입니다.") if request.title.to_s.strip.empty?
-            user_id, role = TokenHelper.verify_token(call)
+            user_id, role = RoleHelper.verify_user(call)
            
             unless RoleHelper.has_authority?(user_id, 4)
               raise GRPC::PermissionDenied.new("조교 이상만 일정을 생성할 수 있습니다.")
@@ -82,7 +82,7 @@ module Bannote
 
           # 2. 일정 링크 조회
           def get_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
+             user_id, role = RoleHelper.verify_user(call)
           
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
@@ -112,14 +112,14 @@ module Bannote
 
           # 3. 일정 링크 수정
           def update_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
-           
+            user_id, role = RoleHelper.verify_user(call)
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
             raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
 
-            group = link.group
+            schedule =::Schedule.find_by(schedule_link_id: link.id)
+            group = schedule&.group
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
             if group.group_type_id == 1 ||group.group_type_id == 2
@@ -160,15 +160,22 @@ module Bannote
 
           # 4. 일정 링크 삭제
           def delete_schedule_link(request, call)
-            user_id, role = TokenHelper.verify_token(call)
+             user_id, role = RoleHelper.verify_user(call)
+
             raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
             link = ::ScheduleLink.find_by(id: request.link_id)
             raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
 
-            group = link.group
-            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+            schedule = ::Schedule.find_by(schedule_link_id: link.id)
 
+              if schedule.nil?
+                puts "[WARN] 이 링크와 연결된 Schedule이 없습니다. group 검증 없이 삭제 진행."
+              else
+                group = schedule.group
+                raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+
+           
             if group.group_type_id == 1 || group.group_type_id == 2
               unless RoleHelper.has_authority?(user_id, 4)
                 raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다.")
@@ -178,6 +185,7 @@ module Bannote
                 raise GRPC::PermissionDenied.new("개인 그룹은 생성자만 삭제할 수 있습니다.")
               end
             end
+          end
 
             link.destroy!
             Bannote::Scheduleservice::ScheduleLink::V1::DeleteScheduleLinkResponse.new(success: true)

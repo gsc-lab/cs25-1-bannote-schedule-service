@@ -15,7 +15,7 @@ AppScheduleLink  = ::ScheduleLink
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
     def create_schedule(request, call)
-      user_id, role = TokenHelper.verify_token(call)
+      user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
       group = ::Group.find_by(id: request.group_id)
@@ -86,7 +86,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 2. 일정 목록 조회 (그룹 ID별)
     def get_schedule_list(request, call)
-      user_id, role = TokenHelper.verify_token(call)
+      user_id, role = RoleHelper.verify_user(call)
       user = ::User.find_by(id: user_id)
       allowed_group_ids = user ? user.groups.pluck(:id) : []
       #요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
@@ -122,8 +122,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 3. 일정 상세 조회
     def get_schedule(request, call)
-      user_id, role = TokenHelper.verify_token(call)
-  
+      user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
       schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
@@ -150,8 +149,8 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 4. 일정 수정 
     def update_schedule(request, call)
-      user_id, role = TokenHelper.verify_token(call)
-      
+      user_id, role = RoleHelper.verify_user(call)
+
       schedule = ::Schedule.find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
 
@@ -191,8 +190,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 5. 일정 삭제 (ScheduleLink도 함께 삭제)
     def delete_schedule(request, call)
-      user_id, role = TokenHelper.verify_token(call)
-      
+      user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
       schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)

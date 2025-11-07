@@ -41,8 +41,8 @@ module Bannote
                 raise GRPC::InvalidArgument.new("유효하지 않은 예약 우선순위입니다.") if permission.nil?
 
                 #3. 인증
-                user_id, role = TokenHelper.verify_token(call)
-                    
+                user_id, role = RoleHelper.verify_user(call)
+
                 #4.그룹 생성
                   group = ::Group.create!(
                     group_type_id: group_type_id,
@@ -125,8 +125,8 @@ module Bannote
               end
             end
 
-            # jwt인증[카프카 아직 x]
-            user_id, role = TokenHelper.verify_token(call)
+            # 메타데이터[카프카 아직 x]
+            user_id, role = RoleHelper.verify_user(call)
 
             #3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
             if request.has_is_public? && request.is_public == false
@@ -160,8 +160,8 @@ module Bannote
             # 1. 요청 파싱
             group_id = request.group_id
 
-            #  jwt인증
-            user_id, role = TokenHelper.verify_token(call)
+            #  메타데이터
+            user_id, role = RoleHelper.verify_user(call)
 
             group = ::Group.includes(:tags, :group_permission).find(group_id)
 
@@ -181,9 +181,9 @@ module Bannote
             group_id = request.group_id
             raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
-            #2. jwt인증
-            user_id, role = TokenHelper.verify_token(call)
-            
+            #2. 메타데이터
+            user_id, role = RoleHelper.verify_user(call)
+
             #3.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
@@ -250,7 +250,7 @@ module Bannote
           def delete_group(request, call)
           #1. 파싱
             group_id = request.group_id
-            
+
             #2.유효성 검사
             raise GRPC::InvalidArgument.new("group_id는 필수입니다") if group_id.nil? || group_id <= 0
 

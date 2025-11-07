@@ -25,10 +25,6 @@ development:
   <<: *default
   database: <%= ENV['DB_NAME'] || 'ban_note_development' %>
 
-test:
-  <<: *default
-  database: <%= ENV['DB_NAME'] || 'ban_note_test' %>
-
 production:
   <<: *default
   database: <%= ENV['DB_NAME'] || 'ban_note_production' %>
