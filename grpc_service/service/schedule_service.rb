@@ -147,7 +147,7 @@ module Bannote::Scheduleservice::Schedule::V1
       )
     end
 
-    # 4. 일정 수정 (Schedule + ScheduleLink 동시 수정)
+    # 4. 일정 수정 
     def update_schedule(request, call)
       user_id, role = [1, "admin"]
 
@@ -166,25 +166,25 @@ module Bannote::Scheduleservice::Schedule::V1
         end
       end
 
-      link_data = schedule.schedule_link
+      #일정 수정
       schedule.update!(
-        comment: request.comment.presence || schedule.comment,
+        memo: request.comment.presence || schedule.memo,
         color: request.is_highlighted ? "highlight" : "normal"
       )
 
-      link.update!(
-        title: request.title.presence || link.title
-      )
-
-      Schedule::ScheduleResponse.new(
-        schedule_id: schedule.id,
-        schedule_code: schedule.schedule_code,
-        group_id: schedule.group_id,
-        code: schedule.group.group_code,
-        schedule_link_id: link.id,
-        color: schedule.color,
-        created_by: schedule.created_by,
-        created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
+      # 응답
+      Bannote::Scheduleservice::Schedule::V1::UpdateScheduleResponse.new(
+        schedule: Bannote::Scheduleservice::Schedule::V1::Schedule.new(
+          schedule_id: schedule.id,
+          code: schedule.schedule_code,
+          group_id: schedule.group_id,
+          schedule_link_id: schedule.schedule_link_id,
+          comment: schedule.memo,
+          color: schedule.color,
+          created_by: schedule.created_by,
+          created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i),
+          updated_at: Google::Protobuf::Timestamp.new(seconds: schedule.updated_at.to_i)
+        )
       )
     end
 
@@ -216,7 +216,7 @@ module Bannote::Scheduleservice::Schedule::V1
         schedule.destroy!
       end
 
-      Schedule::DeleteScheduleResponse.new(success: true)
+    Bannote::Scheduleservice::Schedule::V1::DeleteScheduleResponse.new(success: true)
     rescue => e
       puts "일정 삭제 실패: #{e.message}"
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INTERNAL, "삭제 중 오류 발생: #{e.message}")
