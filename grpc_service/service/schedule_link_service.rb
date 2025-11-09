@@ -15,16 +15,16 @@ module Bannote
         class ScheduleLinkServiceHandler < Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkService::Service
 
           # 1. 일정 링크 생성
-          def create_schedule_link(request, call)
-            start_time = Time.at(request.start_time.seconds)
-            end_time   = Time.at(request.end_time.seconds)
+          # def create_schedule_link(request, call)
+          #   start_time = Time.at(request.start_time.seconds)
+          #   end_time   = Time.at(request.end_time.seconds)
 
-            raise GRPC::InvalidArgument.new("제목은 필수입니다.") if request.title.to_s.strip.empty?
-            user_id, role = RoleHelper.verify_user(call)
+          #   raise GRPC::InvalidArgument.new("제목은 필수입니다.") if request.title.to_s.strip.empty?
+          #   user_id, role = RoleHelper.verify_user(call)
            
-            unless RoleHelper.has_authority?(user_id, 4)
-              raise GRPC::PermissionDenied.new("조교 이상만 일정을 생성할 수 있습니다.")
-            end
+          #   unless RoleHelper.has_authority?(user_id, 4)
+          #     raise GRPC::PermissionDenied.new("조교 이상만 일정을 생성할 수 있습니다.")
+          #   end
 
             # 스터디룸 예약 연동
             # if request.place_text&.include?("스터디룸") || request.place_type == "studyroom"
@@ -50,65 +50,72 @@ module Bannote
             #   end
             # end
 
-            schedule_link = ::ScheduleLink.create!(
-              title: request.title,
-              place_id: request.place_id.zero? ? nil : request.place_id,
-              place_text: request.place_text,
-              description: request.description,
-              start_time: start_time,
-              end_time: end_time,
-              is_allday: request.is_allday,
-              created_by: user_id
-            )
+          #   schedule_link = ::ScheduleLink.create!(
+          #     title: request.title,
+          #     place_id: request.place_id.zero? ? nil : request.place_id,
+          #     place_text: request.place_text,
+          #     description: request.description,
+          #     start_time: start_time,
+          #     end_time: end_time,
+          #     is_allday: request.is_allday,
+          #     created_by: user_id
+          #   )
 
-            link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
-              link_id: schedule_link.id,
-              schedule_id: request.schedule_id,
-              title: schedule_link.title,
-              place_id: schedule_link.place_id || 0,
-              place_text: schedule_link.place_text || "",
-              description: schedule_link.description,
-              start_time: Google::Protobuf::Timestamp.new(seconds: schedule_link.start_time.to_i),
-              end_time: Google::Protobuf::Timestamp.new(seconds: schedule_link.end_time.to_i),
-              is_allday: schedule_link.is_allday,
-              created_by: schedule_link.created_by,
-              created_at: Google::Protobuf::Timestamp.new(seconds: schedule_link.created_at.to_i)
-            )
+          #   link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
+          #     link_id: schedule_link.id,
+          #     schedule_id: request.schedule_id,
+          #     title: schedule_link.title,
+          #     place_id: schedule_link.place_id || 0,
+          #     place_text: schedule_link.place_text || "",
+          #     description: schedule_link.description,
+          #     start_time: Google::Protobuf::Timestamp.new(seconds: schedule_link.start_time.to_i),
+          #     end_time: Google::Protobuf::Timestamp.new(seconds: schedule_link.end_time.to_i),
+          #     is_allday: schedule_link.is_allday,
+          #     created_by: schedule_link.created_by,
+          #     created_at: Google::Protobuf::Timestamp.new(seconds: schedule_link.created_at.to_i)
+          #   )
 
-            Bannote::Scheduleservice::ScheduleLink::V1::CreateScheduleLinkResponse.new(schedule_link: link_object)
-          rescue => e
-            raise GRPC::InvalidArgument.new("일정 링크 생성 실패: #{e.message}")
-          end
+          #   Bannote::Scheduleservice::ScheduleLink::V1::CreateScheduleLinkResponse.new(schedule_link: link_object)
+          # rescue => e
+          #   raise GRPC::InvalidArgument.new("일정 링크 생성 실패: #{e.message}")
+          # end
 
-          # 2. 일정 링크 조회
-          def get_schedule_link(request, call)
-             user_id, role = RoleHelper.verify_user(call)
-          
-            raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
-            link = ::ScheduleLink.find_by(id: request.link_id)
-            raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
+        def get_schedule_link(request, call)
+          user_id, role = RoleHelper.verify_user(call)
+          raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
-            group = link.group
-            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+          # 1. 링크 조회
+          link = ::ScheduleLink.find_by(id: request.link_id)
+          raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
 
-            is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
-            unless is_member
-              raise GRPC::PermissionDenied.new("이 그룹에 속하지 않아 일정을 조회할 수 없습니다.")
-            end
+          # 2. 연결된 일정 조회
+          schedule = ::Schedule.find_by(schedule_link_id: link.id)
+          raise GRPC::NotFound.new("연결된 일정(Schedule)을 찾을 수 없습니다.") if schedule.nil?
 
-            link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
-              link_id: link.id,
-              title: link.title,
-              description: link.description,
-              start_time: Google::Protobuf::Timestamp.new(seconds: link.start_time.to_i),
-              end_time: Google::Protobuf::Timestamp.new(seconds: link.end_time.to_i),
-              is_allday: link.is_allday,
-              created_by: link.created_by
-            )
+          # 3. 일정으로부터 그룹 조회 
+          group = schedule.group
+          raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
-            Bannote::Scheduleservice::ScheduleLink::V1::GetScheduleLinkResponse.new(schedule_link: link_object)
-          end
+          # 4. 그룹 멤버 확인
+          is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+          raise GRPC::PermissionDenied.new("이 그룹에 속하지 않아 일정을 조회할 수 없습니다.") unless is_member
+
+          # 5. 응답 객체 생성
+          link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
+            link_id: link.id,
+            title: link.title,
+            description: link.description,
+            start_time: Google::Protobuf::Timestamp.new(seconds: link.start_time.to_i),
+            end_time: Google::Protobuf::Timestamp.new(seconds: link.end_time.to_i),
+            is_allday: link.is_allday,
+            created_by: link.created_by
+          )
+
+          # 6. 결과 반환
+          Bannote::Scheduleservice::ScheduleLink::V1::GetScheduleLinkResponse.new(schedule_link: link_object)
+        end
+
 
           # 3. 일정 링크 수정
           def update_schedule_link(request, call)
@@ -158,40 +165,40 @@ module Bannote
             Bannote::Scheduleservice::ScheduleLink::V1::UpdateScheduleLinkResponse.new(schedule_link: link_object)
           end
 
-          # 4. 일정 링크 삭제
-          def delete_schedule_link(request, call)
-             user_id, role = RoleHelper.verify_user(call)
+          # # 4. 일정 링크 삭제
+          # def delete_schedule_link(request, call)
+          #    user_id, role = RoleHelper.verify_user(call)
 
-            raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
+          #   raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
-            link = ::ScheduleLink.find_by(id: request.link_id)
-            raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
+          #   link = ::ScheduleLink.find_by(id: request.link_id)
+          #   raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
 
-            schedule = ::Schedule.find_by(schedule_link_id: link.id)
+          #   schedule = ::Schedule.find_by(schedule_link_id: link.id)
 
-              if schedule.nil?
-                puts "[WARN] 이 링크와 연결된 Schedule이 없습니다. group 검증 없이 삭제 진행."
-              else
-                group = schedule.group
-                raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+          #     if schedule.nil?
+          #       puts "[WARN] 이 링크와 연결된 Schedule이 없습니다. group 검증 없이 삭제 진행."
+          #     else
+          #       group = schedule.group
+          #       raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
            
-            if group.group_type_id == 1 || group.group_type_id == 2
-              unless RoleHelper.has_authority?(user_id, 4)
-                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다.")
-              end
-            else
-              unless link.created_by == user_id
-                raise GRPC::PermissionDenied.new("개인 그룹은 생성자만 삭제할 수 있습니다.")
-              end
-            end
-          end
+          #   if group.group_type_id == 1 || group.group_type_id == 2
+          #     unless RoleHelper.has_authority?(user_id, 4)
+          #       raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다.")
+          #     end
+          #   else
+          #     unless link.created_by == user_id
+          #       raise GRPC::PermissionDenied.new("개인 그룹은 생성자만 삭제할 수 있습니다.")
+          #     end
+          #   end
+          # end
 
-            link.destroy!
-            Bannote::Scheduleservice::ScheduleLink::V1::DeleteScheduleLinkResponse.new(success: true)
-          rescue => e
-            raise GRPC::Internal.new("일정 링크 삭제 실패: #{e.message}")
-          end
+          #   link.destroy!
+          #   Bannote::Scheduleservice::ScheduleLink::V1::DeleteScheduleLinkResponse.new(success: true)
+          # rescue => e
+          #   raise GRPC::Internal.new("일정 링크 삭제 실패: #{e.message}")
+          # end
         end
       end
     end
