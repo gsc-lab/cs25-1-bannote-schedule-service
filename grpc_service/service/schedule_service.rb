@@ -89,13 +89,23 @@ module Bannote::Scheduleservice::Schedule::V1
       user_id, role = RoleHelper.verify_user(call)
       user = ::User.find_by(id: user_id)
       allowed_group_ids = user ? user.groups.pluck(:id) : []
+
       #요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
       target_group_ids = request.group_ids & allowed_group_ids
+      if target_group_ids.empty?
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 그룹이 없습니다.")
+      end
+
       #일정 조회
       schedules = AppSchedule.where(group_id: target_group_ids)
                           .includes(:schedule_link)
                           .order(created_at: :desc)
-
+      
+      #일정 자체가 없을떄 예외처리
+      if schedules.empty?
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 일정이 없습니다.")
+      end
+      
       schedule_responses = schedules.map do |s|
         Bannote::Scheduleservice::Schedule::V1::Schedule.new(
           schedule_id: s.id,

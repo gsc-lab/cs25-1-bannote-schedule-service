@@ -10,7 +10,6 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 1. 태그 생성
     def create_tag(request, call)
-
       #1.파싱 
       name = request.name&.strip
       #2. 유효성 검사
@@ -61,8 +60,11 @@ module Bannote::Scheduleservice::Tag::V1
         if RoleHelper.has_authority?(user_id, 4)
           tags =::Tag.all.order(created_at: :desc)
         else
-          #일반 사용자 공개 태그만 
-          tags =::Tag.where(is_public: true).order(created_at: :desc)
+          #일반 사용자는 본인 + 공개 그룹
+          tags = ::Tag.joins(:groups)
+              .where(groups: { is_public: true })
+              .distinct
+              .order(created_at: :desc)
         end
 
       rescue GRPC::Unauthenticated

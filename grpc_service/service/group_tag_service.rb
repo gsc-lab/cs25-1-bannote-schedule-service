@@ -23,7 +23,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다.") if tag_id.nil? || tag_id <= 0
 
             #3. 인증
-            user_id, role = TokenHelper.verify_token(call)
+             user_id, role = RoleHelper.verify_user(call)
 
             #4. 태그 여부
             group = ::Group.find_by(id: request.group_id)
@@ -65,7 +65,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("groud_id는 필수 입니다")if group_id.nil? || group_id <= 0
 
             #3. 안중
-            user_id, role = TokenHelper.verify_token(call)
+             user_id, role = RoleHelper.verify_user(call)
 
             #4. db조회
             group = ::Group.find(request.group_id)
@@ -95,7 +95,7 @@ module Bannote
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
 
             #3.인증
-            user_id, role = TokenHelper.verify_token(call)
+             user_id, role = RoleHelper.verify_user(call)
 
             #그룹 조회
             group = ::Group.find_by(id: group_id)

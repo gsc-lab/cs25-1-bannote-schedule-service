@@ -64,7 +64,6 @@ module Bannote
     
                   puts "UserGroup created for user_id-#{user_id}, group_id=#{group.id}"
     
-
                   # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
                   if request.tag_ids && !request.tag_ids.empty?
                     tag_ids = request.tag_ids.to_a.map!(&:to_i)
@@ -255,8 +254,8 @@ module Bannote
             raise GRPC::InvalidArgument.new("group_id는 필수입니다") if group_id.nil? || group_id <= 0
 
             # 3. 인증
-            user_id, role = TokenHelper.verify_token(call)
-              
+            user_id, role = RoleHelper.verify_user(call)
+
             #4.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
