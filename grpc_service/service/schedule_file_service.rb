@@ -95,7 +95,7 @@ module Bannote
             #권한 검증
             case group.group_type_id
             when 1,2
-              unless RoleHelper.has_authority?(user_id,4)
+              unless RoleHelper.has_authority?(role,4)
                 raise GRPC::PermissionDenied.new("정규 수업 그룹의 파일은 조교 이상만 삭제 할 수 있습니다")
               end
             

@@ -17,7 +17,7 @@ module Bannote::Scheduleservice::Tag::V1
       user_id, role = RoleHelper.verify_user(call)
 
       # 관리자 이상만 생성 가능
-      unless RoleHelper.has_authority?(user_id, 4)
+      unless RoleHelper.has_authority?(role, 4)
         raise GRPC::PermissionDenied.new("태그 생성은 조교님 이상 가능합니다.")
       end
 
@@ -37,7 +37,7 @@ module Bannote::Scheduleservice::Tag::V1
       tag_id = request.tag_id
       raise GRPC::InvalidArgument.new("tag_id는 필수 입니다") if tag_id.nil?|| tag_id <=0
     #3. 유효성 검사
-      unless RoleHelper.has_authority?(user_id, 4)
+      unless RoleHelper.has_authority?(role, 4)
         raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
       end
     #4. db조회
@@ -57,7 +57,7 @@ module Bannote::Scheduleservice::Tag::V1
         user_id, role = RoleHelper.verify_user(call)
 
         #관리자 이상일 경우
-        if RoleHelper.has_authority?(user_id, 4)
+        if RoleHelper.has_authority?(role, 4)
           tags =::Tag.all.order(created_at: :desc)
         else
           #일반 사용자는 본인 + 공개 그룹
@@ -92,7 +92,7 @@ module Bannote::Scheduleservice::Tag::V1
       raise GRPC::InvalidArgument.new("tag_id는 필수입니다")if tag_id.nil? || tag_id <=0
 
       #3. 권한검사
-      unless RoleHelper.has_authority?(user_id,4)
+      unless RoleHelper.has_authority?(role,4)
         raise GRPC::PermissionDenied.new("삭제할 태그를 찾을 수 있습니다")
       end
 

@@ -23,7 +23,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       # 권한 검증
       if group.group_type_id.in?([1, 2])
-        unless RoleHelper.has_authority?(user_id, 4)
+        unless RoleHelper.has_authority?(role, 4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
         end
       else
@@ -166,7 +166,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       group = schedule.group
       if group.group_type_id == 1 || group.group_type_id == 2
-        unless RoleHelper.has_authority?(user_id, 4)
+        unless RoleHelper.has_authority?(role, 4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 수정 가능합니다.")
         end
       else
@@ -211,7 +211,7 @@ module Bannote::Scheduleservice::Schedule::V1
       # 권한 검증
       case group.group_type_id 
       when 1,2
-        unless RoleHelper.has_authority?(user_id,4)
+        unless RoleHelper.has_authority?(role,4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 삭제할 수 있습니다.")
         end
       else #개인그룹

@@ -4,6 +4,17 @@ require 'role/role_pb'
 require 'role/service_services_pb'
 
 module RoleHelper
+  # 역할별 권한 레벨 테이블
+    ROLE_LEVELS = {
+      
+    "student"   => 1,
+    "keeper"    => 2,
+    "leader"    => 3,
+    "assistant" => 4,
+    "professor" => 5,
+    "admin"     => 6
+  }.freeze
+
   # 인증 + 유저 조회
   def self.verify_user(call)
     user_code = call.metadata["x-user-code"]

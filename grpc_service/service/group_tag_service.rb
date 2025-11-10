@@ -33,7 +33,7 @@ module Bannote
             raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
             #권한 검증
             if group.group_type_id == 1 ||group.group_type_id == 2
-              unless RoleHelper.has_authority?(user_id,4)
+              unless RoleHelper.has_authority?(role,4)
                 raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
               end
             end
@@ -103,7 +103,7 @@ module Bannote
 
             #4.권한 검증 
             if group.group_type_id == 1
-              unless RoleHelper.has_authority?(user_id,4)
+              unless RoleHelper.has_authority?(role,4)
                 raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 태그를 삭제할 수 있습니다")
               end
             else

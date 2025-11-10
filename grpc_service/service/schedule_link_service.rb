@@ -130,7 +130,7 @@ module Bannote
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
             if group.group_type_id == 1 ||group.group_type_id == 2
-              unless RoleHelper.has_authority?(user_id, 4)
+              unless RoleHelper.has_authority?(role, 4)
                 raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 수정할 수 있습니다.")
               end
             else

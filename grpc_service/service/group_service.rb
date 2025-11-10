@@ -192,7 +192,7 @@ module Bannote
             case permission_label
             when "1", "2"
               # 긴급·정규 그룹 → 조교 이상만 수정 가능
-              unless RoleHelper.has_authority?(user_id, 4)
+              unless RoleHelper.has_authority?(role, 4)
                 raise GRPC::PermissionDenied.new("긴급/정규 그룹은 조교 이상만 수정할 수 있습니다.")
               end
             when "3"
