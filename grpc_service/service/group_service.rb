@@ -127,6 +127,8 @@ module Bannote
             # 메타데이터[카프카 아직 x]
             user_id, role = RoleHelper.verify_user(call)
 
+            groups = ::Group.all
+
             #3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
             if request.has_is_public? && request.is_public == false
               #비공개 그룹 조회시
@@ -147,11 +149,17 @@ module Bannote
             end
             
             #5. 응답 생성
-            responses = groups.map { |g| build_group_response(g)}
-            Bannote::Scheduleservice::Group::V1::GroupListResponse.new(groups: responses)
-          rescue => e
-            puts " 그룹 목록 조회 실패: #{e.class} - #{e.message}"
-            raise GRPC::Internal.new("그룹 목록 조회 실패: #{e.message}")
+            responses = groups.map { |g| build_group_response(g) }.compact
+            # 그룹이 없을 때 처리
+            if responses.empty?
+              raise GRPC::NotFound.new("조회 가능한 그룹이 없습니다.")
+            end
+
+            Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
+              group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
+                groups: responses
+              )
+            )
           end
 
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
@@ -297,21 +305,21 @@ module Bannote
             end
 
             Bannote::Scheduleservice::Group::V1::Group.new(
-              group_id: group.id,
-              group_code: group.group_code,
-              group_type_id: group.group_type_id,
-              group_name: group.group_name,
-              group_description: group.group_description || "",
-              is_public: group.is_public,
-              is_published: group.is_published,
-              color_default: group.color_default || "",
-              color_highlight: group.color_highlight || "",
+              group_id: group.id.to_i,
+              group_code: group.group_code.to_s,
+              group_type_id: group.group_type_id.to_i,
+              group_name: group.group_name.to_s,
+              group_description: group.group_description.to_s,
+              is_public: !!group.is_public,
+              is_published: !!group.is_published,
+              color_default: group.color_default.to_s,
+              color_highlight: group.color_highlight.to_s,
               created_at: group.created_at ? Google::Protobuf::Timestamp.new(seconds: group.created_at.to_i) : nil,
               updated_at: group.updated_at ? Google::Protobuf::Timestamp.new(seconds: group.updated_at.to_i) : nil,
               deleted_at: group.deleted_at ? Google::Protobuf::Timestamp.new(seconds: group.deleted_at.to_i) : nil,
-              created_by: group.created_by || 0,
-              updated_by: group.updated_by || 0,
-              deleted_by: group.deleted_by || 0,
+              created_by: group.created_by.to_i,
+              updated_by: group.updated_by.to_i,
+              deleted_by: group.deleted_by.to_i,
               tags: tags
             )
           end

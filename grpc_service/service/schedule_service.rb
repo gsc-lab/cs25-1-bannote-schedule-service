@@ -72,10 +72,7 @@ module Bannote::Scheduleservice::Schedule::V1
             schedule_id: schedule.id,
             code: schedule.schedule_code,
             group_id: schedule.group_id,
-            schedule_link_id: schedule.schedule_link_id,
-            color: schedule.color,
-            comment: schedule.memo,
-            created_by: schedule.created_by,
+            schedule_link_id: schedule.schedule_link_id, 
             created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
           )
         )
