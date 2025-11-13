@@ -167,7 +167,7 @@ services:
       kafka:
         condition: service_started
     ports:
-      - "3000:3000"
+      - "8080:3000"
       - "9090:9090"
       - "55005:55005"
     # 환경별 .env 자동 로드

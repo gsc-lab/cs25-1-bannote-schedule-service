@@ -93,11 +93,21 @@ module Bannote::Scheduleservice::Schedule::V1
         raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 그룹이 없습니다.")
       end
 
-      #일정 조회
-      schedules = AppSchedule.where(group_id: target_group_ids)
-                          .includes(:schedule_link)
-                          .order(created_at: :desc)
+      #요청된 기간 
+      start_time = request.start_date&.seconds ? Time.at(request.start_date.seconds) : nil
+      end_time   = request.end_date&.seconds ? Time.at(request.end_date.seconds) : nil
       
+      #일정 조회 -> 검색 조건 필터링 (join)
+      schedules = AppSchedule.joins(:schedule_link)
+                         .where(group_id: target_group_ids)
+
+      #기간 필터링
+      schedules = schedules.where("schedules.end_date >= ?", start_time) if start_time
+      schedules = schedules.where("schedules.start_date <= ?", end_time) if end_time
+      
+      #무조건 최신순 정렬
+      schedules = schedules.order(created_at: :desc)
+
       #일정 자체가 없을떄 예외처리
       if schedules.empty?
         raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 일정이 없습니다.")

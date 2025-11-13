@@ -21,8 +21,14 @@ module Bannote::Scheduleservice::Tag::V1
         raise GRPC::PermissionDenied.new("태그 생성은 조교님 이상 가능합니다.")
       end
 
+      #tag이름 중복시
+      if ::Tag.exists?(name:name)
+        raise GRPC::AlreadyExists.new("이미 존재하는 태그입니다.")
+      end
+
       #5.생성
       tag = ::Tag.create!( name: request.name ,created_by: user_id)
+      
       #6. 응답 반환
       Bannote::Scheduleservice::Tag::V1::CreateTagResponse.new(tag: build_tag_response(tag))
     rescue => e

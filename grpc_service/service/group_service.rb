@@ -31,7 +31,11 @@ module Bannote
                 raise GRPC::InvalidArgument.new("group_name은 필수입니다") if group_name.blank?
                 raise GRPC::InvalidArgument.new("group_name은 50자 미만으로 해주세요") if group_name.length > 50
                 raise GRPC::InvalidArgument.new("group_type_id는 필수입니다") if group_type_id.nil?
-                
+                #그룹이름 
+                if ::Group.exists?(group_name:group_name)
+                  raise GRPC::AlreadyExists.new("이미 존재하는 그룹이름입니다")
+                end
+
                 if is_published && !is_public # 그룹 검색할떄 false이면 공개 x
                   puts "비공개 그룹이 발행되었습니다. 공개목록에는 표시되지않습니다"
                 end
@@ -95,13 +99,13 @@ module Bannote
                   # 6.응답생성
                 Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
                 end
-            rescue GRPC::BadStatus => e
-              raise e  # 원래의 gRPC 에러 그대로 전달
-            rescue ActiveRecord::RecordInvalid => e
-              raise GRPC::InvalidArgument.new("그룹 생성 중 오류: #{e.message}")
-            rescue => e
-              raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
-            end
+                rescue GRPC::BadStatus => e
+                  raise e  # 원래의 gRPC 에러 그대로 전달
+                rescue ActiveRecord::RecordInvalid => e
+                  raise GRPC::InvalidArgument.new("그룹 생성 중 오류: #{e.message}")
+                rescue => e
+                  raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
+                end
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, call)
             #1. 요청 파싱 
