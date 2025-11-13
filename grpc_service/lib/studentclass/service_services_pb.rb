@@ -32,6 +32,8 @@ module Bannote
             rpc :DeleteStudentClass, ::Bannote::Userservice::Studentclass::V1::DeleteStudentClassRequest, ::Bannote::Userservice::Studentclass::V1::DeleteStudentClassResponse
             #  학반 목록 조회 API
             rpc :ListStudentClasses, ::Bannote::Userservice::Studentclass::V1::ListStudentClassesRequest, ::Bannote::Userservice::Studentclass::V1::ListStudentClassesResponse
+            # 학반 ID 리스트로 학반 목록 조회 API (React Admin 지원)
+            rpc :GetManyStudentClasses, ::Bannote::Userservice::Studentclass::V1::GetManyStudentClassesRequest, ::Bannote::Userservice::Studentclass::V1::GetManyStudentClassesResponse
           end
 
           Stub = Service.rpc_stub_class

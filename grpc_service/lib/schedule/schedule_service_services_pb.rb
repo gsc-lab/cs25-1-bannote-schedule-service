@@ -22,6 +22,8 @@ module Bannote
             rpc :GetSchedule, ::Bannote::Scheduleservice::Schedule::V1::GetScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::GetScheduleResponse
             rpc :UpdateSchedule, ::Bannote::Scheduleservice::Schedule::V1::UpdateScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::UpdateScheduleResponse
             rpc :DeleteSchedule, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleResponse
+            # 개인그룹은 그룹만 가지고 스케줄은 안갖고 있게하기위해서
+            rpc :DeleteScheduleLink, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleLinkRequest, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleLinkResponse
           end
 
           Stub = Service.rpc_stub_class
