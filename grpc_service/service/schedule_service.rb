@@ -14,6 +14,7 @@ AppScheduleLink  = ::ScheduleLink
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
+    
     def create_schedule(request, call)
       user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?

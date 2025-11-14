@@ -116,7 +116,6 @@ module Bannote
           Bannote::Scheduleservice::ScheduleLink::V1::GetScheduleLinkResponse.new(schedule_link: link_object)
         end
 
-
           # 3. 일정 링크 수정
           def update_schedule_link(request, call)
             user_id, role = RoleHelper.verify_user(call)
