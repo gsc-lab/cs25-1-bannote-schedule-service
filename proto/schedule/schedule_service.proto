@@ -4,7 +4,6 @@ package bannote.scheduleservice.schedule.v1;
 
 import "google/protobuf/timestamp.proto";
 import "schedule/schedule.proto";
-import "common.proto";
 
 
 service ScheduleService {
@@ -13,6 +12,8 @@ service ScheduleService {
   rpc GetSchedule(GetScheduleRequest) returns (GetScheduleResponse);
   rpc UpdateSchedule(UpdateScheduleRequest) returns (UpdateScheduleResponse);
   rpc DeleteSchedule(DeleteScheduleRequest) returns (DeleteScheduleResponse);
+  // 개인그룹은 그룹만 가지고 스케줄은 안갖고 있게하기위해서
+  rpc DeleteScheduleLink(DeleteScheduleLinkRequest) returns (DeleteScheduleLinkResponse);
 }
 
 // ================================
@@ -58,6 +59,15 @@ message DeleteScheduleRequest {
 }
 
 message DeleteScheduleResponse {
+  bool success = 1;
+}
+
+message DeleteScheduleLinkRequest {
+  int64 schedule_id = 1;
+}
+
+
+message DeleteScheduleLinkResponse {
   bool success = 1;
 }
 

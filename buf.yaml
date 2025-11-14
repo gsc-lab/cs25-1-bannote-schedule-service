@@ -1,10 +1,6 @@
 version: v2
 modules:
-  - name: buf.build/bannote/schedule-service
-    path: proto
-    lint:
-      ignore_only:
-        PACKAGE_DIRECTORY_MATCH: []
+  - path: proto
 deps:
   - buf.build/bannote/schedule-service
   # - buf.build/bannote/token-service
