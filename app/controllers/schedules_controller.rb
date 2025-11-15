@@ -1,6 +1,6 @@
 class SchedulesController < ApplicationController
   before_action :set_group
-  before_action :set_schedule, only: [:show, :update, :destroy]
+  before_action :set_schedule, only: [ :show, :update, :destroy ]
 
 
   # 1. 일정 목록 조회 (GET)

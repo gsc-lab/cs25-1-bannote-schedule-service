@@ -10,7 +10,6 @@ module Bannote
       module V1
         module TokenService
           class Service
-
             include ::GRPC::GenericService
 
             self.marshal_class_method = :encode

@@ -79,7 +79,7 @@ module RoleHelper
 
     # DB에 없어도 임시로 user_id = 0 으로 통과시킴
     user_id = user ? user.id : 0
-    [user_id, user_role]
+    [ user_id, user_role ]
   end
 
   # 권한 확인 (레벨 비교 방식으로 수정)

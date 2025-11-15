@@ -30,7 +30,7 @@ module BanNote
 
     config.autoload_lib(ignore: %w[assets tasks grpc_service/lib])
 
-    
+
 
     # Configuration for the application, engines, and railties goes here.
     #

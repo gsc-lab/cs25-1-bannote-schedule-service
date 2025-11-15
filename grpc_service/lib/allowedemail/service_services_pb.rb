@@ -15,7 +15,6 @@ module Bannote
           #
           # The email allowlist service definition.
           class Service
-
             include ::GRPC::GenericService
 
             self.marshal_class_method = :encode
