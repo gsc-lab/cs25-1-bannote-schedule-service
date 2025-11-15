@@ -28,6 +28,8 @@ module Bannote
             rpc :DeleteDepartment, ::Bannote::Userservice::Department::V1::DeleteDepartmentRequest, ::Bannote::Userservice::Department::V1::DeleteDepartmentResponse
             #  학과 목록 조회 API
             rpc :ListDepartments, ::Bannote::Userservice::Department::V1::ListDepartmentsRequest, ::Bannote::Userservice::Department::V1::ListDepartmentsResponse
+            #  학과 ID 리스트로 학과 목록 조회 API (React Admin 지원)
+            rpc :GetManyDepartments, ::Bannote::Userservice::Department::V1::GetManyDepartmentsRequest, ::Bannote::Userservice::Department::V1::GetManyDepartmentsResponse
           end
 
           Stub = Service.rpc_stub_class

@@ -1,15 +1,12 @@
 version: v2
 modules:
-  - name: buf.build/bannote/schedule-service
-    path: proto
-    lint:
-      ignore_only:
-        PACKAGE_DIRECTORY_MATCH: []
+  - path: proto
 deps:
-  - buf.build/bannote/token-service
-  - buf.build/bannote/user-service  
-  - buf.build/bannote/common-service
-  - buf.build/googleapis/googleapis
+  - buf.build/bannote/schedule-service
+  # - buf.build/bannote/token-service
+  # - buf.build/bannote/user-service  
+  # - buf.build/bannote/common-service
+  # - buf.build/googleapis/googleapis
 lint:
   except: []
 breaking:

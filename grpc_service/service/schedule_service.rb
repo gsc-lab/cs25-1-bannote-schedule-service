@@ -14,6 +14,7 @@ AppScheduleLink  = ::ScheduleLink
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
+    
     def create_schedule(request, call)
       user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
@@ -237,6 +238,38 @@ module Bannote::Scheduleservice::Schedule::V1
     rescue => e
       puts "일정 삭제 실패: #{e.message}"
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INTERNAL, "삭제 중 오류 발생: #{e.message}")
+    end
+
+    #개인 그룹 그룹은 등록되어있지만 스케줄링크는 안들고있을경우
+    def delete_schedule_link(request,call)
+      user_id, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
+
+      schedule = ::Schedule.includes(:group,:schedule_link).find_by(id: request.schedule_id)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
+
+      group = schedule.group
+
+      #개인그룹만 링크 삭제 가능
+      unless group.group_type_id == 3
+        raise GRPC::BadStatus.new_status_exception(  GRPC::Core::StatusCodes::PERMISSION_DENIED,  "정규 수업 그룹에서는 스케줄링크만 삭제할 수 없습니다.")
+      end
+
+      link = schedule.schedule_link 
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"스케줄링크가 없습니다.") if link.nil?
+
+      ActiveRecord::Base.transaction do
+         # soft delete 방식
+        link.update!(deleted_at: Time.current, deleted_by: user_id)
+
+        #스케줄에서 연결 제거
+        schedule.update!(schedule_link_id: nil)
+      end
+
+      Bannote::Scheduleservice::Schedule::V1::DeleteScheduleLinkResponse.new(success: true)
+
+    rescue => e
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INTERNAL, "링크 삭제 실패: #{e.message}")
     end
   end
 end
