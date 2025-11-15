@@ -10,7 +10,6 @@ module Bannote
       module V1
         module ScheduleFileService
           class Service
-
             include ::GRPC::GenericService
 
             self.marshal_class_method = :encode

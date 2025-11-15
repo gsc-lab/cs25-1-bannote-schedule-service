@@ -39,7 +39,7 @@ require_relative 'service/schedule_service'
 require_relative 'service/schedule_link_service'
 require_relative 'service/schedule_file_service'
 
-require_relative './health_check_service' 
+require_relative './health_check_service'
 
 module Bannote
   module Scheduleservice
@@ -65,7 +65,7 @@ def main
   puts "gRPC 서버가 #{port} 포트에서 실행 중입니다..."
 
   #  서버 실행 (등록된 서비스 포함)
-  server.run_till_terminated_or_interrupted(['INT', 'TERM'])
+  server.run_till_terminated_or_interrupted([ 'INT', 'TERM' ])
   puts "서버가 종료되었습니다."
 end
 

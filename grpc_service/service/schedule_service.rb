@@ -6,7 +6,7 @@ require 'securerandom'
 require_relative '../helpers/Role_helper'
 
 
-# #최근에 저장된 모듈scheulde을 들고오기떄문에 삭제 해주고 
+# #최근에 저장된 모듈scheulde을 들고오기떄문에 삭제 해주고
 # ::Object.send(:remove_const, :Schedule) if defined?(Schedule)
 # Rails 모델을 명시적으로 alias로 등록
 AppSchedule      = ::Schedule
@@ -14,7 +14,6 @@ AppScheduleLink  = ::ScheduleLink
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
-    
     def create_schedule(request, call)
       user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
@@ -23,7 +22,7 @@ module Bannote::Scheduleservice::Schedule::V1
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "그룹을 찾을 수 없습니다.") if group.nil?
 
       # 권한 검증
-      if group.group_type_id.in?([1, 2])
+      if group.group_type_id.in?([ 1, 2 ])
         unless RoleHelper.has_authority?(role, 4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
         end
@@ -73,7 +72,7 @@ module Bannote::Scheduleservice::Schedule::V1
             schedule_id: schedule.id,
             code: schedule.schedule_code,
             group_id: schedule.group_id,
-            schedule_link_id: schedule.schedule_link_id, 
+            schedule_link_id: schedule.schedule_link_id,
             created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
           )
         )
@@ -88,32 +87,32 @@ module Bannote::Scheduleservice::Schedule::V1
       user = ::User.find_by(id: user_id)
       allowed_group_ids = user ? user.groups.pluck(:id) : []
 
-      #요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
+      # 요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
       target_group_ids = request.group_ids & allowed_group_ids
       if target_group_ids.empty?
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 그룹이 없습니다.")
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "조회 가능한 그룹이 없습니다.")
       end
 
-      #요청된 기간 
+      # 요청된 기간
       start_time = request.start_date&.seconds ? Time.at(request.start_date.seconds) : nil
       end_time   = request.end_date&.seconds ? Time.at(request.end_date.seconds) : nil
-      
-      #일정 조회 -> 검색 조건 필터링 (join)
+
+      # 일정 조회 -> 검색 조건 필터링 (join)
       schedules = AppSchedule.joins(:schedule_link)
                          .where(group_id: target_group_ids)
 
-      #기간 필터링
+      # 기간 필터링
       schedules = schedules.where("schedules.end_date >= ?", start_time) if start_time
       schedules = schedules.where("schedules.start_date <= ?", end_time) if end_time
-      
-      #무조건 최신순 정렬
+
+      # 무조건 최신순 정렬
       schedules = schedules.order(created_at: :desc)
 
-      #일정 자체가 없을떄 예외처리
+      # 일정 자체가 없을떄 예외처리
       if schedules.empty?
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"조회 가능한 일정이 없습니다.")
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "조회 가능한 일정이 없습니다.")
       end
-      
+
       schedule_responses = schedules.map do |s|
         Bannote::Scheduleservice::Schedule::V1::Schedule.new(
           schedule_id: s.id,
@@ -165,7 +164,7 @@ module Bannote::Scheduleservice::Schedule::V1
       )
     end
 
-    # 4. 일정 수정 
+    # 4. 일정 수정
     def update_schedule(request, call)
       user_id, role = RoleHelper.verify_user(call)
 
@@ -184,7 +183,7 @@ module Bannote::Scheduleservice::Schedule::V1
         end
       end
 
-      #일정 수정
+      # 일정 수정
       schedule.update!(
         memo: request.comment.presence || schedule.memo,
         color: request.is_highlighted ? "highlight" : "normal"
@@ -217,12 +216,12 @@ module Bannote::Scheduleservice::Schedule::V1
       group = schedule.group
 
       # 권한 검증
-      case group.group_type_id 
-      when 1,2
-        unless RoleHelper.has_authority?(role,4)
+      case group.group_type_id
+      when 1, 2
+        unless RoleHelper.has_authority?(role, 4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 삭제할 수 있습니다.")
         end
-      else #개인그룹
+      else # 개인그룹
         is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
         unless is_member
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 삭제할 수 없습니다.")
@@ -240,29 +239,29 @@ module Bannote::Scheduleservice::Schedule::V1
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INTERNAL, "삭제 중 오류 발생: #{e.message}")
     end
 
-    #개인 그룹 그룹은 등록되어있지만 스케줄링크는 안들고있을경우
-    def delete_schedule_link(request,call)
+    # 개인 그룹 그룹은 등록되어있지만 스케줄링크는 안들고있을경우
+    def delete_schedule_link(request, call)
       user_id, role = RoleHelper.verify_user(call)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
 
-      schedule = ::Schedule.includes(:group,:schedule_link).find_by(id: request.schedule_id)
+      schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
 
       group = schedule.group
 
-      #개인그룹만 링크 삭제 가능
+      # 개인그룹만 링크 삭제 가능
       unless group.group_type_id == 3
-        raise GRPC::BadStatus.new_status_exception(  GRPC::Core::StatusCodes::PERMISSION_DENIED,  "정규 수업 그룹에서는 스케줄링크만 삭제할 수 없습니다.")
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED,  "정규 수업 그룹에서는 스케줄링크만 삭제할 수 없습니다.")
       end
 
-      link = schedule.schedule_link 
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND,"스케줄링크가 없습니다.") if link.nil?
+      link = schedule.schedule_link
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "스케줄링크가 없습니다.") if link.nil?
 
       ActiveRecord::Base.transaction do
-         # soft delete 방식
+        # soft delete 방식
         link.update!(deleted_at: Time.current, deleted_by: user_id)
 
-        #스케줄에서 연결 제거
+        # 스케줄에서 연결 제거
         schedule.update!(schedule_link_id: nil)
       end
 

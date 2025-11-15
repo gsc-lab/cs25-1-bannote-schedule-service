@@ -1,5 +1,5 @@
 
-require_relative '../../config/environment' 
+require_relative '../../config/environment'
 require 'grpc'
 require 'group/group_pb'
 require 'group/group_service_services_pb'
@@ -14,9 +14,9 @@ module Bannote
       module V1
         #  새로운 package 이름에 맞는 클래스 상속
         class GroupServiceHandler < Bannote::Scheduleservice::Group::V1::GroupService::Service
-                    # 1. 그룹 생성
+            # 1. 그룹 생성
             def create_group(request, call)
-              #1. 요청 파싱 시작
+                # 1. 요청 파싱 시작
                 group_type_id = request.group_type_id
                 group_name = request.group_name
                 group_description = request.group_description
@@ -25,29 +25,29 @@ module Bannote
                 color_default = request.color_default  ||= "#172C66"
                 color_highlight = request.color_highlight ||= "#F4E58F"
                 tag_ids =  request.tag_ids
-    
-                #2. 유효성 검사
-                #2.1 필수값  검증
+
+                # 2. 유효성 검사
+                # 2.1 필수값  검증
                 raise GRPC::InvalidArgument.new("group_name은 필수입니다") if group_name.blank?
                 raise GRPC::InvalidArgument.new("group_name은 50자 미만으로 해주세요") if group_name.length > 50
                 raise GRPC::InvalidArgument.new("group_type_id는 필수입니다") if group_type_id.nil?
-                #그룹이름 
-                if ::Group.exists?(group_name:group_name)
+                # 그룹이름
+                if ::Group.exists?(group_name: group_name)
                   raise GRPC::AlreadyExists.new("이미 존재하는 그룹이름입니다")
                 end
 
                 if is_published && !is_public # 그룹 검색할떄 false이면 공개 x
                   puts "비공개 그룹이 발행되었습니다. 공개목록에는 표시되지않습니다"
                 end
-    
-                #group_permission 존재 확인 (예약 우선순위 연결)
+
+                # group_permission 존재 확인 (예약 우선순위 연결)
                 permission = ::GroupPermission.find_by(id: group_type_id)
                 raise GRPC::InvalidArgument.new("유효하지 않은 예약 우선순위입니다.") if permission.nil?
 
-                #3. 인증
+                # 3. 인증
                 user_id, role = RoleHelper.verify_user(call)
 
-                #4.그룹 생성
+                  # 4.그룹 생성
                   group = ::Group.create!(
                     group_type_id: group_type_id,
                     group_name: request.group_name,
@@ -60,14 +60,14 @@ module Bannote
                     created_by: user_id
                   )
                   puts "그룹 생성 Group #{group.id}"
-    
-                
-                  #생성자를 해당 그룹의 맴버로 자동 등록
-                #::UserGroup.create!(user_id: user_id, group_id: group.id) 나중에 이거를 주석 해제해야함
-                  ::UserGroup.create!(user_id: user_id, group_id: group.id, created_at: Time.current) #이거 나중에 삭제해야함
-    
+
+
+                  # 생성자를 해당 그룹의 맴버로 자동 등록
+                  # ::UserGroup.create!(user_id: user_id, group_id: group.id) 나중에 이거를 주석 해제해야함
+                  ::UserGroup.create!(user_id: user_id, group_id: group.id, created_at: Time.current) # 이거 나중에 삭제해야함
+
                   puts "UserGroup created for user_id-#{user_id}, group_id=#{group.id}"
-    
+
                   # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
                   if request.tag_ids && !request.tag_ids.empty?
                     tag_ids = request.tag_ids.to_a.map!(&:to_i)
@@ -78,27 +78,27 @@ module Bannote
                     if existing_tags.length != request.tag_ids.length
                       missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
                       raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
-                    end          
-                  #태그 연결
+                    end
+                  # 태그 연결
                   if tag_ids.present?
                     existing_tags = ::Tag.where(id: tag_ids)
                     if existing_tags.size != tag_ids.size
                       missing = tag_ids - existing_tags.pluck(:id)
                       raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing.join(', ')}")
                     end
-    
+
                     tag_ids.each do |tag_id|
-                      # ::GroupTag.create!(group_id: group.id, tag_id: tag_id) 나중에 주석 삭제
+                        # ::GroupTag.create!(group_id: group.id, tag_id: tag_id) 나중에 주석 삭제
                         ::GroupTag.create!(
                           group_id: group.id,
                           tag_id: tag_id,
                         )
                       end
-                    end
-    
-                  # 6.응답생성
+                  end
+
+                # 6.응답생성
                 Bannote::Scheduleservice::Group::V1::CreateGroupResponse.new(group: build_group_response(group.reload))
-                end
+                  end
                 rescue GRPC::BadStatus => e
                   raise e  # 원래의 gRPC 에러 그대로 전달
                 rescue ActiveRecord::RecordInvalid => e
@@ -108,22 +108,22 @@ module Bannote
                 end
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, call)
-            #1. 요청 파싱 
+            # 1. 요청 파싱
             group_type_id = request.group_type_id.to_i if request.has_group_type_id?
             is_public = request.is_public if request.has_is_public?
             is_published = request.is_published if request.has_is_published?
             tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
 
 
-            #2.유효성 검사
-            if request.has_group_type_id? 
-              unless [1, 2, 3].include?(request.group_type_id)
+            # 2.유효성 검사
+            if request.has_group_type_id?
+              unless [ 1, 2, 3 ].include?(request.group_type_id)
                 raise GRPC::InvalidArgument.new("유효하지 않은 group_type_id입니다")
               end
             end
-        
+
             if request.tag_ids.any?
-              unless request.tag_ids.all? {|id| id.is_a?(Integer) && id.positive?}
+              unless request.tag_ids.all? { |id| id.is_a?(Integer) && id.positive? }
                 raise GRPC::InvalidArgument.new("tag_ids는 양의 정수여야 합니다")
               end
             end
@@ -133,17 +133,17 @@ module Bannote
 
             groups = ::Group.all
 
-            #3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
+            # 3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
             if request.has_is_public? && request.is_public == false
-              #비공개 그룹 조회시
+              # 비공개 그룹 조회시
               groups =::Group.joins(:user_groups)
-                              .where(user_groups: {user_id: user_id})
+                              .where(user_groups: { user_id: user_id })
             else
-              #공개 그룹은 전체 조회 가능
+              # 공개 그룹은 전체 조회 가능
               groups = ::Group.where(is_public: true)
             end
-            
-            # 4. 추가 필터 
+
+            # 4. 추가 필터
             groups = groups.where(group_type_id: group_type_id) if group_type_id
             groups = groups.where(is_published: is_published) if request.has_is_published?
 
@@ -151,8 +151,8 @@ module Bannote
             if tag_ids.any?
               groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
             end
-            
-            #5. 응답 생성
+
+            # 5. 응답 생성
             responses = groups.map { |g| build_group_response(g) }.compact
             # 그룹이 없을 때 처리
             if responses.empty?
@@ -179,7 +179,7 @@ module Bannote
             # 응답 변환
             Bannote::Scheduleservice::Group::V1::GetGroupResponse.new(group: build_group_response(group))
 
-              #5.예외처리
+              # 5.예외처리
             rescue ActiveRecord::RecordNotFound
               raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.")
             rescue => e
@@ -188,18 +188,18 @@ module Bannote
 
           # 4. 그룹 수정
           def update_group(request, call)
-            #1.파싱
+            # 1.파싱
             group_id = request.group_id
-            raise GRPC::InvalidArgument.new("group_id는 필수 입니다")if group_id.nil? || group_id <= 0
+            raise GRPC::InvalidArgument.new("group_id는 필수 입니다") if group_id.nil? || group_id <= 0
 
-            #2. 메타데이터
+            # 2. 메타데이터
             user_id, role = RoleHelper.verify_user(call)
 
-            #3.그룹 조회
+            # 3.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
 
-          # 4. 권한 검증
+            # 4. 권한 검증
             permission_label = group.group_permission&.permission
             case permission_label
             when "1", "2"
@@ -216,10 +216,10 @@ module Bannote
             else
               raise GRPC::InvalidArgument.new("유효하지 않은 권한 값입니다.")
             end
-            
-           #5. 수정 필드
+
+            # 5. 수정 필드
             update_attrs = {}
-            #optional은 그 필드 자체를 보낼지 말지 선택할 수 있다
+            # optional은 그 필드 자체를 보낼지 말지 선택할 수 있다
             update_attrs[:group_name] = request.group_name if request.has_group_name?
             update_attrs[:group_description] = request.group_description if request.has_group_description?
             update_attrs[:is_public] = request.is_public if request.has_is_public?
@@ -242,13 +242,13 @@ module Bannote
 
               group.tags = existing_tags
             end
-          
-           # 7. 응답 반환
+
+            # 7. 응답 반환
             Bannote::Scheduleservice::Group::V1::UpdateGroupResponse.new(
               group: build_group_response(group.reload)
             )
-          
-            #8. 예외 처리
+
+            # 8. 예외 처리
             rescue ActiveRecord::RecordNotFound
               raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.")
             rescue ActiveRecord::RecordInvalid => e
@@ -259,32 +259,32 @@ module Bannote
 
           # 5. 그룹 삭제
           def delete_group(request, call)
-          #1. 파싱
+            # 1. 파싱
             group_id = request.group_id
 
-            #2.유효성 검사
+            # 2.유효성 검사
             raise GRPC::InvalidArgument.new("group_id는 필수입니다") if group_id.nil? || group_id <= 0
 
             # 3. 인증
             user_id, role = RoleHelper.verify_user(call)
 
-            #4.그룹 조회
+            # 4.그룹 조회
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
 
-            #5.권한 검증 생성자만 삭제 가능
+            # 5.권한 검증 생성자만 삭제 가능
             unless group.created_by == user_id
               raise GRPC::PermissionDenied.new("이 그룹의 생성자만 삭제 할 수 있습니다")
             end
-            
-            #6.삭제 수행
+
+            # 6.삭제 수행
             group.destroy!
             puts "그룹 삭제 완료 ID=#{group.id}, by user_id=#{user_id}"
 
-            #7.응답 반환
+              # 7.응답 반환
               Bannote::Scheduleservice::Group::V1::DeleteGroupResponse.new(success: true)
-              
-            #8. 예외처리
+
+            # 8. 예외처리
             rescue ActiveRecord::RecordNotFound
               raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.")
             rescue ActiveRecord::RecordNotDestroyed => e
@@ -295,11 +295,11 @@ module Bannote
               raise GRPC::Internal.new("그룹 삭제 실패: #{e.message}")
           end
 
-          private #외부에서 직접 호출 못함
+          private # 외부에서 직접 호출 못함
           # ActiveRecord 모델 객체를 gRPC 응답 메시지로 변환하는 헬퍼 메소드
-          #grpc가 이해할수있는 응답형태롤 만들어주기 위해서  데이터 변환
+          # grpc가 이해할수있는 응답형태롤 만들어주기 위해서  데이터 변환
 
-          def build_group_response(group) #결과를 변환해서 gprc에 맞게 보내줌
+          def build_group_response(group) # 결과를 변환해서 gprc에 맞게 보내줌
             tags = group.tags.map do |t|
               Bannote::Scheduleservice::Tag::V1::Tag.new(
                 tag_id: t.id,

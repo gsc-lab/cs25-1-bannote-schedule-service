@@ -13,7 +13,6 @@ module Bannote
           # Group Service 정의
           # ================================
           class Service
-
             include ::GRPC::GenericService
 
             self.marshal_class_method = :encode
