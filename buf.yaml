@@ -5,7 +5,7 @@ deps:
   - buf.build/bannote/schedule-service
   # - buf.build/bannote/token-service
   # - buf.build/bannote/user-service  
-  # - buf.build/bannote/common-service
+  - buf.build/bannote/common-service
   # - buf.build/googleapis/googleapis
 lint:
   except: []

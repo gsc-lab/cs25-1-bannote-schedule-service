@@ -1,6 +1,13 @@
 # 1. gRPC 라이브러리 로드
 require 'grpc'
 
+#lib/
+$LOAD_PATH.unshift(File.expand_path('lib', __dir__))
+#lib/event/v1
+$LOAD_PATH.unshift(File.expand_path('lib/events/v1', __dir__))
+# service/
+$LOAD_PATH.unshift(File.expand_path('service', __dir__))
+
 # 2. Rails 환경 로드
 require File.expand_path('../config/environment', __dir__)
 Rails.application.eager_load!
@@ -63,6 +70,16 @@ def main
   server.handle(Grpc::Health::V1::HealthServiceHandler)
 
   puts "gRPC 서버가 #{port} 포트에서 실행 중입니다..."
+
+  #kafka consumer 실행(user,department) -> 하나의 서버 프로세스 안에서 두 가지 일을 동시에 해야 해서 Thread가 필요
+  Thread.new do
+    require_relative "lib/kafka/user_changed_consumer"
+    require_relative "lib/kafka/department_changed_consumer"
+
+    puts "kafka user, department시작"
+    Thread.new { UserChangedConsumer.start }
+    Thread.new { DepartmentChangedConsumer.start }
+  end
 
   #  서버 실행 (등록된 서비스 포함)
   server.run_till_terminated_or_interrupted([ 'INT', 'TERM' ])

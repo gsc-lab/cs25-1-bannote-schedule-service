@@ -11,6 +11,7 @@ module Bannote
         module UserService
           # The user service definition.
           class Service
+
             include ::GRPC::GenericService
 
             self.marshal_class_method = :encode
