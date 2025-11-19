@@ -21,6 +21,7 @@ message CreateTagRequest {
 
 message GetTagRequest {
   int64 tag_id = 1;
+  string name = 2; 
 }
 
 message DeleteTagRequest {
@@ -40,7 +41,7 @@ message GetTagResponse {
 }
 
 message GetTagListRequest {
-  // No fields needed for a simple list request, but it's good practice to have a dedicated message
+  string tag_name = 1; 
 }
 
 message GetTagListResponse {

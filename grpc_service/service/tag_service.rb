@@ -1,5 +1,6 @@
 require 'grpc'
 require 'tag/tag_pb'
+require 'tag/tag_service_pb'  
 require 'tag/tag_service_services_pb'
 require 'common_pb'
 require_relative '../helpers/Role_helper'
@@ -35,29 +36,80 @@ module Bannote::Scheduleservice::Tag::V1
     end
 
     # 2. 단일 태그 조회(관리자용)
-    def get_tag(request, call)
-      user_id, role = RoleHelper.verify_user(call)
+    # def get_tag(request, call)
+    #   user_id, role = RoleHelper.verify_user(call)
 
-      # 2. 파싱
-      tag_id = request.tag_id
-      raise GRPC::InvalidArgument.new("tag_id는 필수 입니다") if tag_id.nil?|| tag_id <=0
-      # 3. 유효성 검사
-      unless RoleHelper.has_authority?(role, 4)
-        raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
-      end
-      # 4. db조회
-      tag = ::Tag.find(request.tag_id)
-      # 5. 응답
-      Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(tag: build_tag_response(tag))
-    # 6. 에러
-    rescue ActiveRecord::RecordNotFound
-      raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
-    rescue => e
+    #   # 2. 파싱
+    #   tag_id = request.tag_id
+    #   tag_name = request.name&.strip
+
+    #   if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
+    #     raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
+    #   end
+
+    #   # 3. 유효성 검사
+    #   unless RoleHelper.has_authority?(role, 4)
+    #     raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
+    #   end
+
+    #   # 4. db조회
+    #   tag =
+    #     if tag_id.present? && tag_id > 0
+    #       ::Tag.find_by(id: tag_id)
+    #     elsif tag_name.present?
+    #       ::Tag.find_by(name: tag_name)
+    #     end
+
+    #   raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
+
+    #   # 5. 응답
+    #   Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(tag: build_tag_response(tag))
+
+    #   # 6. 에러
+    #   rescue ActiveRecord::RecordNotFound
+    #     raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
+    #   rescue => e
+    #       raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
+    # end
+    #단일 태그 조회
+    def get_tag(request, call)
+        user_id, role = RoleHelper.verify_user(call)
+
+        tag_id = request.tag_id
+        tag_name = request.name&.strip
+
+        if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
+          raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
+        end
+
+        unless RoleHelper.has_authority?(role, 4)
+          raise GRPC::PermissionDenied.new("조교이상만 권한 있습니다")
+        end
+
+        tag =
+          if tag_id.present? && tag_id > 0
+            ::Tag.find_by(id: tag_id)
+          elsif tag_name.present?
+            ::Tag.find_by(name: tag_name)
+          end
+
+        raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
+
+        Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(
+          tag: build_tag_response(tag)
+        )
+
+      rescue ActiveRecord::RecordNotFound
+        raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
+
+      rescue => e
         raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
     end
 
     # 3. 태그 목록 조회
-    def get_tag_list(_request, call)
+    def get_tag_list(request, call)
+      tag_name = request.tag_name&.strip
+
       begin # 예외가 발생할 수 있는 코드
         user_id, role = RoleHelper.verify_user(call)
 
@@ -75,14 +127,18 @@ module Bannote::Scheduleservice::Tag::V1
       rescue GRPC::Unauthenticated
          tags = ::Tag.where(is_public: true).order(created_at: :desc)
       end
+      
+      if tag_name.present?
+         tags = tags.where("name LIKE ?", "%#{tag_name}%")
+      end
+      
+      tags = tags.order(created_at: :desc)
 
-      # 응답
       Bannote::Scheduleservice::Tag::V1::GetTagListResponse.new(
-      tag_list_response: Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
-        tags: tags.map { |t| build_tag_response(t) }
+        tag_list_response: Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
+          tags: tags.map { |t| build_tag_response(t) }
+        )
       )
-    )
-
     rescue => e
       raise GRPC::Internal.new("태그 목록 조회 실패: #{e.message}")
     end

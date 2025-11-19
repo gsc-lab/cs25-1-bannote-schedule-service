@@ -53,6 +53,10 @@ module Bannote
   end
 end
 
+
+# require_relative "lib/kafka/user_changed_consumer"
+# require_relative "lib/kafka/department_changed_consumer"
+
 # 5. gRPC 서버 실행
 def main
   port = ENV.fetch('GRPC_PORT', '55005')
@@ -80,6 +84,10 @@ def main
   #   Thread.new { UserChangedConsumer.start }
   #   Thread.new { DepartmentChangedConsumer.start }
   # end
+  
+  # puts "Kafka Consumers 시작"
+  # Thread.new { UserChangedConsumer.start }
+  # Thread.new { DepartmentChangedConsumer.start }
 
   #  서버 실행 (등록된 서비스 포함)
   server.run_till_terminated_or_interrupted([ 'INT', 'TERM' ])
