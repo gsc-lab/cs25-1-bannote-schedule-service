@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package bannote.userservice.role.v1;
+
+import "common/enums.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/role/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.role.v1";
+
+// 유저-권한 매핑
+message UserRoleMapping {
+  string user_code = 1;
+  bannote.userservice.common.v1.UserRole role = 2;
+}

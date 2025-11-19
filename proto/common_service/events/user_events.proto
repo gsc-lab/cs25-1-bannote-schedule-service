@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package bannote.commonservice.events.v1;
+
+import "google/protobuf/timestamp.proto";
+import "events/enums.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/common-service/events/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.commonservice.proto.events.v1";
+
+// 이벤트 타입
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_CREATED = 1;
+  EVENT_TYPE_UPDATED = 2;
+  EVENT_TYPE_DELETED = 3;
+}
+
+// 유저 변경 이벤트
+message UserChangedEvent {
+  // 이벤트 메타데이터
+  string event_id = 1;
+  EventType event_type = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string triggered_by = 4; // 이벤트를 발생시킨 사용자/시스템
+
+  // 유저 데이터
+  string user_code = 10;
+  string user_email = 11;
+  string user_name = 12;
+  string family_name = 13;
+  string given_name = 14;
+  bannote.commonservice.events.v1.UserType user_type = 15;
+  bannote.commonservice.events.v1.UserStatus user_status = 16;
+  optional string bio = 17;
+  optional string profile_image_url = 18;
+  repeated bannote.commonservice.events.v1.UserRole user_roles = 19;
+
+  // 학생인 경우 추가 정보
+  optional string student_class_code = 20;
+  optional string student_class_name = 21;
+
+  // 학과 정보 (학생/교직원)
+  optional string department_code = 30;
+  optional string department_name = 31;
+}
+
+// 학과 변경 이벤트
+message DepartmentChangedEvent {
+  // 이벤트 메타데이터
+  string event_id = 1;
+  EventType event_type = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string triggered_by = 4;
+
+  // 학과 데이터
+  string department_code = 10;
+  string department_name = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+// 학반 변경 이벤트
+message StudentClassChangedEvent {
+  // 이벤트 메타데이터
+  string event_id = 1;
+  EventType event_type = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  string triggered_by = 4;
+
+  // 학반 데이터
+  string student_class_code = 10;
+  string department_code = 11;
+  string student_class_name = 12;
+  int32 admission_year = 13;
+  int32 graduation_year = 14;
+  bannote.commonservice.events.v1.StudentClassStatus status = 15;
+  google.protobuf.Timestamp created_at = 16;
+  optional google.protobuf.Timestamp deleted_at = 17;
+  string created_by = 18;
+}
+
+// 카프카 토픽 규칙:
+// - user.changed: 유저 변경 이벤트
+// - department.changed: 학과 변경 이벤트
+// - student-class.changed: 학반 변경 이벤트

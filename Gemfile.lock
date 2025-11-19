@@ -432,6 +432,7 @@ DEPENDENCIES
   ruby-kafka
   stimulus-rails
   thruster
+  timeout (~> 0.4.3)
   turbo-rails
   tzinfo-data
   web-console

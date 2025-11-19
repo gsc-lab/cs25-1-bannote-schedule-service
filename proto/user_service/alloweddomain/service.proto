@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package bannote.userservice.alloweddomain.v1;
+
+import "alloweddomain/alloweddomain.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/allowed_domain/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.allowed_domain.v1";
+
+// Gateway에서 gRPC metadata로 전달되는 정보:
+// - user-id: 요청하는 유저의 ID
+// - user-role: 요청하는 유저의 역할 (ADMIN, STUDENT, EMPLOYEE 등)
+
+// The domain allowlist service definition.
+service AllowedDomainService {
+//  도메인 허용 목록 추가 API
+  rpc AddAllowedDomain (AddAllowedDomainRequest) returns (AddAllowedDomainResponse) {
+  }
+
+//  도메인 허용 목록 삭제 API
+  rpc RemoveAllowedDomain (RemoveAllowedDomainRequest) returns (RemoveAllowedDomainResponse) {
+  }
+
+//  도메인 허용 목록 전체 조회 API
+  rpc ListAllowedDomain (ListAllowedDomainRequest) returns (ListAllowedDomainResponse) {
+  }
+
+// 이메일을 이용하여 허용된 도메인인지 검증 API
+  rpc CheckAllowedDomain (CheckAllowedDomainRequest) returns (CheckAllowedDomainResponse) {
+  }
+}
+
+// 도메인 허용 목록 추가 시 필요한 정보
+message AddAllowedDomainRequest {
+  string domain = 1;
+}
+
+message AddAllowedDomainResponse {
+  AllowedDomain allowed_domain = 1;
+}
+
+// 도메인 허용 목록 삭제 시 필요한 정보
+message RemoveAllowedDomainRequest {
+  string domain = 1;
+}
+
+message RemoveAllowedDomainResponse {
+  AllowedDomain allowed_domain = 1;
+}
+
+// 도메인 허용 목록 전체 조회 시 필요한 정보
+message ListAllowedDomainRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+// 도메인 허용 목록 전체 조회 응답
+message ListAllowedDomainResponse {
+  repeated AllowedDomain allowed_domain = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 size = 4;
+}
+
+message CheckAllowedDomainRequest {
+  string email = 1;
+}
+
+message CheckAllowedDomainResponse {
+  bool is_allowed = 1;
+  string domain = 2;
+}

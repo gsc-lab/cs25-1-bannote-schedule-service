@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package bannote.userservice.department.v1;
+
+import "google/protobuf/timestamp.proto"; 
+import "common/messages.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/department/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.department.v1";
+
+// 학과
+message Department {
+  string department_code = 1;
+  string name = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
+
+message DepartmentWithAudit {
+  Department department = 1;
+  bannote.userservice.common.v1.AuditInfo audit_info = 2;
+}

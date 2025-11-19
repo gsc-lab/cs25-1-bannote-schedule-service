@@ -8,7 +8,7 @@
 
 
 class UserGroup < ApplicationRecord
-  self.record_timestamps = false   # ← 이 한 줄 추가
+  self.record_timestamps = true
   belongs_to :user, optional: true
   belongs_to :group, optional: true
   validates :group_id, presence: true

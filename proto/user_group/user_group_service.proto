@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.user.v1;
+
+import "user_group/user_group.proto";
+
+
+service UserGroupService {
+  rpc AddUserToGroup(AddUserToGroupRequest) returns (AddUserToGroupResponse);
+  rpc GetUsersInGroup(GetUsersInGroupRequest) returns (GetUsersInGroupResponse);
+  rpc GetGroupsOfUser(GetGroupsOfUserRequest) returns (GetGroupsOfUserResponse);
+  rpc RemoveUserFromGroup(RemoveUserFromGroupRequest) returns (RemoveUserFromGroupResponse);
+}
+
+// AddUserToGroup
+message AddUserToGroupRequest {
+  int64 group_id = 1;
+  int64 user_id = 2;
+}
+
+// GetUsersInGroup
+message GetUsersInGroupRequest {
+  int64 group_id = 1;
+}
+
+// GetGroupsOfUser
+message GetGroupsOfUserRequest {
+  int64 user_id = 1;
+}
+
+// RemoveUserFromGroup
+message RemoveUserFromGroupRequest {
+  int64 group_id = 1;
+  int64 user_id = 2;
+}
+
+message RemoveUserFromGroupResponse {
+  bool success = 1;
+}

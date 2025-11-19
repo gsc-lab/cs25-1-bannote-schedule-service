@@ -40,7 +40,7 @@ require 'schedule_file/schedule_file_service_services_pb'
 # 직접 구현한 서비스 핸들러 파일들 로드
 require_relative 'service/group_service'
 require_relative 'service/group_tag_service'
-# require_relative 'service/user_group_service'
+require_relative 'service/user_group_service'
 require_relative 'service/tag_service'
 require_relative 'service/schedule_service'
 require_relative 'service/schedule_link_service'
@@ -63,7 +63,7 @@ def main
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::GroupTag::V1::GroupTagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Tag::V1::TagServiceHandler.new)
-  # server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
+  server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
   server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
@@ -72,14 +72,14 @@ def main
   puts "gRPC 서버가 #{port} 포트에서 실행 중입니다..."
 
   #kafka consumer 실행(user,department) -> 하나의 서버 프로세스 안에서 두 가지 일을 동시에 해야 해서 Thread가 필요
-  Thread.new do
-    require_relative "lib/kafka/user_changed_consumer"
-    require_relative "lib/kafka/department_changed_consumer"
+  # Thread.new do
+  #   require_relative "lib/kafka/user_changed_consumer"
+  #   require_relative "lib/kafka/department_changed_consumer"
 
-    puts "kafka user, department시작"
-    Thread.new { UserChangedConsumer.start }
-    Thread.new { DepartmentChangedConsumer.start }
-  end
+  #   puts "kafka user, department시작"
+  #   Thread.new { UserChangedConsumer.start }
+  #   Thread.new { DepartmentChangedConsumer.start }
+  # end
 
   #  서버 실행 (등록된 서비스 포함)
   server.run_till_terminated_or_interrupted([ 'INT', 'TERM' ])
