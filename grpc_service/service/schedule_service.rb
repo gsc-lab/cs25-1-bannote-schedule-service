@@ -98,8 +98,9 @@ module Bannote::Scheduleservice::Schedule::V1
       end_time   = request.end_date&.seconds ? Time.at(request.end_date.seconds) : nil
 
       # 일정 조회 -> 검색 조건 필터링 (join)
-      schedules = AppSchedule.joins(:schedule_link)
-                         .where(group_id: target_group_ids)
+      schedules = AppSchedule.includes(:schedule_link)
+                              .joins(:schedule_link)
+                              .where(group_id: target_group_ids)
 
       # 기간 필터링
       schedules = schedules.where("schedules.end_date >= ?", start_time) if start_time
@@ -114,6 +115,7 @@ module Bannote::Scheduleservice::Schedule::V1
       end
 
       schedule_responses = schedules.map do |s|
+        link = s.schedule_link
         Bannote::Scheduleservice::Schedule::V1::Schedule.new(
           schedule_id: s.id,
           code: s.schedule_code,
@@ -126,7 +128,19 @@ module Bannote::Scheduleservice::Schedule::V1
           deleted_at: s.deleted_at ? Google::Protobuf::Timestamp.new(seconds: s.deleted_at.to_i) : nil,
           created_by: s.created_by,
           updated_by: s.updated_by,
-          deleted_by: s.deleted_by
+          deleted_by: s.deleted_by,
+
+          #schedule_link
+          schedule_link: link ? Bannote::Scheduleservice::Schedule::V1::ScheduleLink.new(
+            schedule_link_id: link.id,
+            title: link.title,
+            place_id: link.place_id,
+            place_text: link.place_text,
+            description: link.description,
+            start_time: link.start_time ? Google::Protobuf::Timestamp.new(seconds: link.start_time.to_i) : nil,
+            end_time:   link.end_time ? Google::Protobuf::Timestamp.new(seconds: link.end_time.to_i) : nil,
+            is_allday: link.is_allday
+          ): nil
         )
       end
 

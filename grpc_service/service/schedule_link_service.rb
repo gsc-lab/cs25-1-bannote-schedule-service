@@ -162,41 +162,6 @@ module Bannote
 
             Bannote::Scheduleservice::ScheduleLink::V1::UpdateScheduleLinkResponse.new(schedule_link: link_object)
           end
-
-          # # 4. 일정 링크 삭제
-          # def delete_schedule_link(request, call)
-          #    user_id, role = RoleHelper.verify_user(call)
-
-          #   raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
-
-          #   link = ::ScheduleLink.find_by(id: request.link_id)
-          #   raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
-
-          #   schedule = ::Schedule.find_by(schedule_link_id: link.id)
-
-          #     if schedule.nil?
-          #       puts "[WARN] 이 링크와 연결된 Schedule이 없습니다. group 검증 없이 삭제 진행."
-          #     else
-          #       group = schedule.group
-          #       raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
-
-
-          #   if group.group_type_id == 1 || group.group_type_id == 2
-          #     unless RoleHelper.has_authority?(user_id, 4)
-          #       raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 삭제할 수 있습니다.")
-          #     end
-          #   else
-          #     unless link.created_by == user_id
-          #       raise GRPC::PermissionDenied.new("개인 그룹은 생성자만 삭제할 수 있습니다.")
-          #     end
-          #   end
-          # end
-
-          #   link.destroy!
-          #   Bannote::Scheduleservice::ScheduleLink::V1::DeleteScheduleLinkResponse.new(success: true)
-          # rescue => e
-          #   raise GRPC::Internal.new("일정 링크 삭제 실패: #{e.message}")
-          # end
         end
       end
     end

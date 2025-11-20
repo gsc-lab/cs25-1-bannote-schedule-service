@@ -4,7 +4,16 @@ package bannote.scheduleservice.schedule.v1;
 
 import "google/protobuf/timestamp.proto";
 
-
+message ScheduleLink {
+  int64 schedule_link_id = 1; 
+  string title = 2;
+  optional int64 place_id = 3;
+  optional string place_text = 4;
+  string description = 5;
+  google.protobuf.Timestamp start_time = 6;
+  google.protobuf.Timestamp end_time = 7;
+  bool is_allday = 8;   
+}
 
 message Schedule {
   int64 schedule_id = 1;
@@ -19,10 +28,11 @@ message Schedule {
   int64 created_by = 10;
   optional int64 updated_by = 11;
   optional int64 deleted_by = 12;
+
+  // ScheduleLink 전체 포함
+  optional ScheduleLink schedule_link = 20;
 }
 
 message ScheduleListResponse {
   repeated Schedule schedules = 1;
 }
-
-

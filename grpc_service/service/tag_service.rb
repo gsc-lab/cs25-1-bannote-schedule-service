@@ -34,43 +34,7 @@ module Bannote::Scheduleservice::Tag::V1
     rescue => e
       raise GRPC::Internal.new("태그 생성 실패: #{e.message}")
     end
-
-    # 2. 단일 태그 조회(관리자용)
-    # def get_tag(request, call)
-    #   user_id, role = RoleHelper.verify_user(call)
-
-    #   # 2. 파싱
-    #   tag_id = request.tag_id
-    #   tag_name = request.name&.strip
-
-    #   if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
-    #     raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
-    #   end
-
-    #   # 3. 유효성 검사
-    #   unless RoleHelper.has_authority?(role, 4)
-    #     raise GRPC:: PermissionDenied.new("조교이상만 권한 있습니다")
-    #   end
-
-    #   # 4. db조회
-    #   tag =
-    #     if tag_id.present? && tag_id > 0
-    #       ::Tag.find_by(id: tag_id)
-    #     elsif tag_name.present?
-    #       ::Tag.find_by(name: tag_name)
-    #     end
-
-    #   raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
-
-    #   # 5. 응답
-    #   Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(tag: build_tag_response(tag))
-
-    #   # 6. 에러
-    #   rescue ActiveRecord::RecordNotFound
-    #     raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
-    #   rescue => e
-    #       raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
-    # end
+    
     #단일 태그 조회
     def get_tag(request, call)
         user_id, role = RoleHelper.verify_user(call)
