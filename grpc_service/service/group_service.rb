@@ -61,7 +61,6 @@ module Bannote
                   )
                   puts "그룹 생성 Group #{group.id}"
 
-
                   # 생성자를 해당 그룹의 맴버로 자동 등록
                   # ::UserGroup.create!(user_id: user_id, group_id: group.id) 나중에 이거를 주석 해제해야함
                   ::UserGroup.create!(user_id: user_id, group_id: group.id, created_at: Time.current) # 이거 나중에 삭제해야함
@@ -107,64 +106,105 @@ module Bannote
                   raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
                 end
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
+          # def get_group_list(request, call)
+          #   # 1. 요청 파싱
+          #   group_type_id = request.group_type_id.to_i if request.has_group_type_id?
+          #   is_public = request.is_public if request.has_is_public?
+          #   is_published = request.is_published if request.has_is_published?
+          #   tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
+
+          #   # 2.유효성 검사
+          #   if request.has_group_type_id?
+          #     unless [ 1, 2, 3 ].include?(request.group_type_id)
+          #       raise GRPC::InvalidArgument.new("유효하지 않은 group_type_id입니다")
+          #     end
+          #   end
+
+          #   if request.tag_ids.any?
+          #     unless request.tag_ids.all? { |id| id.is_a?(Integer) && id.positive? }
+          #       raise GRPC::InvalidArgument.new("tag_ids는 양의 정수여야 합니다")
+          #     end
+          #   end
+
+          #   # 메타데이터[카프카 아직 x]
+          #   user_id, role = RoleHelper.verify_user(call)
+
+          #   groups = ::Group.all
+
+          #   # 3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
+          #   if request.has_is_public? && request.is_public == false
+          #     # 비공개 그룹 조회시
+          #     groups =::Group.joins(:user_groups)
+          #                     .where(user_groups: { user_id: user_id })
+          #   else
+          #     # 공개 그룹은 전체 조회 가능
+          #     groups = ::Group.where(is_public: true)
+          #   end
+
+          #   # 4. 추가 필터
+          #   groups = groups.where(group_type_id: group_type_id) if group_type_id
+          #   groups = groups.where(is_published: is_published) if request.has_is_published?
+
+          #   # 태그 필터 추가
+          #   if tag_ids.any?
+          #     groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
+          #   end
+
+          #   # 5. 응답 생성
+          #   responses = groups.map { |g| build_group_response(g) }.compact
+          #   # 그룹이 없을 때 처리
+          #   if responses.empty?
+          #     raise GRPC::NotFound.new("조회 가능한 그룹이 없습니다.")
+          #   end
+
+          #   Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
+          #     group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
+          #       groups: responses
+          #     )
+          #   )
+          # end
+
           def get_group_list(request, call)
-            # 1. 요청 파싱
-            group_type_id = request.group_type_id.to_i if request.has_group_type_id?
+            user_id, role = RoleHelper.verify_user(call)
+
+            # 1. 필터를 적용하여 기본 그룹 목록 조회
+            groups_query = ::Group.all
+
+            # 2. 필터 적용
+            group_type_id = request.group_type_id if request.has_group_type_id?
             is_public = request.is_public if request.has_is_public?
             is_published = request.is_published if request.has_is_published?
             tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
 
+            groups_query = groups_query.where(group_type_id: group_type_id) if group_type_id
+            groups_query = groups_query.where(is_public: is_public) if request.has_is_public?
+            groups_query = groups_query.where(is_published: is_published) if request.has_is_published?
 
-            # 2.유효성 검사
-            if request.has_group_type_id?
-              unless [ 1, 2, 3 ].include?(request.group_type_id)
-                raise GRPC::InvalidArgument.new("유효하지 않은 group_type_id입니다")
-              end
-            end
-
-            if request.tag_ids.any?
-              unless request.tag_ids.all? { |id| id.is_a?(Integer) && id.positive? }
-                raise GRPC::InvalidArgument.new("tag_ids는 양의 정수여야 합니다")
-              end
-            end
-
-            # 메타데이터[카프카 아직 x]
-            user_id, role = RoleHelper.verify_user(call)
-
-            groups = ::Group.all
-
-            # 3.권한 검증 (조회는 전체 공개 비공개는 안뜨게)
-            if request.has_is_public? && request.is_public == false
-              # 비공개 그룹 조회시
-              groups =::Group.joins(:user_groups)
-                              .where(user_groups: { user_id: user_id })
-            else
-              # 공개 그룹은 전체 조회 가능
-              groups = ::Group.where(is_public: true)
-            end
-
-            # 4. 추가 필터
-            groups = groups.where(group_type_id: group_type_id) if group_type_id
-            groups = groups.where(is_published: is_published) if request.has_is_published?
-
-            # 태그 필터 추가
             if tag_ids.any?
-              groups = groups.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
+              groups_query = groups_query.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
+            end
+            
+            # DB에서 필터링된 그룹들을 가져옴 (태그 join으로 중복이 생길 수 있으므로 distinct 사용)
+            groups = groups_query.distinct
+
+            # 3. 사용자가 가입한 그룹 ID 목록을 한 번의 쿼리로 가져옴
+            bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
+
+            # 4. 응답 변환 (Ruby에서 bookmark 설정)
+            grpc_groups = groups.map do |g|
+              grpc_group = build_group_response(g)
+              grpc_group.bookmark = bookmarked_group_ids.include?(g.id)
+              grpc_group
             end
 
-            # 5. 응답 생성
-            responses = groups.map { |g| build_group_response(g) }.compact
-            # 그룹이 없을 때 처리
-            if responses.empty?
-              raise GRPC::NotFound.new("조회 가능한 그룹이 없습니다.")
-            end
-
+            # 5. gRPC 응답 반환
             Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
               group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
-                groups: responses
+                groups: grpc_groups
               )
             )
           end
+
 
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
           def get_group(request, call)
@@ -324,7 +364,8 @@ module Bannote
               created_by: group.created_by.to_i,
               updated_by: group.updated_by.to_i,
               deleted_by: group.deleted_by.to_i,
-              tags: tags
+              tags: tags,
+              bookmark: group.try(:bookmark)
             )
           end
         end

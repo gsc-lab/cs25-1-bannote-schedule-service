@@ -4,7 +4,7 @@ source "https://rubygems.org"
 gem "grpc"
 gem "google-protobuf"
 gem "redis"
-gem "grpc-tools"
+# gem "grpc-tools"
 gem "ruby-kafka"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"

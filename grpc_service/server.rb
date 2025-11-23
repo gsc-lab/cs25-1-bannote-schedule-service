@@ -7,6 +7,10 @@ $LOAD_PATH.unshift(File.expand_path('lib', __dir__))
 $LOAD_PATH.unshift(File.expand_path('lib/events/v1', __dir__))
 # service/
 $LOAD_PATH.unshift(File.expand_path('service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/common-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/schedule-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/token-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/user-service', __dir__))
 
 # 2. Rails 환경 로드
 require File.expand_path('../config/environment', __dir__)

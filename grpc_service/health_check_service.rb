@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require_relative 'lib/healthcheck/healthcheck_pb'
-require_relative 'lib/healthcheck/healthcheck_services_pb'
+require 'healthcheck/healthcheck_pb'
+require 'healthcheck/healthcheck_services_pb'
+
 
 module Grpc
   module Health
