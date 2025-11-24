@@ -187,11 +187,21 @@ module Bannote
             # DB에서 필터링된 그룹들을 가져옴 (태그 join으로 중복이 생길 수 있으므로 distinct 사용)
             groups = groups_query.distinct
 
+            #페이지네이션 로직
+            page = request.page > 0 ? request.page : 1
+            per_page = request.per_page > 0 ? request.per_page : 10
+
+            total_count = groups.count
+            total_pages = (total_count / per_page.to_f).ceil
+
+            paginated_groups = groups.limit(per_page).offset((page - 1) * per_page)
+
+
             # 3. 사용자가 가입한 그룹 ID 목록을 한 번의 쿼리로 가져옴
             bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
 
             # 4. 응답 변환 (Ruby에서 bookmark 설정)
-            grpc_groups = groups.map do |g|
+            grpc_groups = paginated_groups.map do |g|
               grpc_group = build_group_response(g)
               grpc_group.bookmark = bookmarked_group_ids.include?(g.id)
               grpc_group
@@ -200,11 +210,14 @@ module Bannote
             # 5. gRPC 응답 반환
             Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
               group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
-                groups: grpc_groups
+                groups: grpc_groups,
+                page: page,
+                per_page: per_page,
+                total_count: total_count,
+                total_pages: total_pages
               )
             )
           end
-
 
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
           def get_group(request, call)

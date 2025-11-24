@@ -7,6 +7,7 @@ import "schedule-service/tag/tag.proto";
 
 
 
+
 // ================================
 // Group 관련 메시지 정의
 // ================================
@@ -32,4 +33,8 @@ message Group {
 
 message GroupListResponse {
   repeated Group groups = 1;
+  int32 page = 2;         // 현재 페이지
+  int32 per_page = 3;     // 한 페이지당 개수
+  int64 total_count = 4;  // 전체 그룹 개수
+  int32 total_pages = 5;  // 전체 페이지 수
 }
