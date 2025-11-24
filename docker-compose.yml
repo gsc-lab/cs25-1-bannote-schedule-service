@@ -78,7 +78,7 @@ services:
 
   kafka-ui:
     image: 'kafbat/kafka-ui:latest'
-    container_name: user-service-kafka-ui-dev
+    container_name: kafka-ui
     networks:
       - ban_note_network
     environment:
@@ -112,6 +112,7 @@ services:
     environment:
       # RAILS_ENV: ${RAILS_ENV:-development}
       RAILS_ENV: production
+      SECRET_KEY_BASE: "130de2458be350116cacaf327172a6d8cfaa0c76252590ab0aaf17103c3bc46fbfa4c61fb49572a73e7187dba060bb2706aa7446eb94a10dcbcceda539f8d0e3"
 
     volumes:
       - .:/rails
