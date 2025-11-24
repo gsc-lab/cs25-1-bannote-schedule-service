@@ -7,7 +7,7 @@ require 'google/protobuf'
 require 'google/protobuf/timestamp_pb'
 
 
-descriptor_data = "\n\x1eschedule-service/tag/tag.proto\x12\x1e\x62\x61nnote.scheduleservice.tag.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8a\x01\n\x03Tag\x12\x15\n\x06tag_id\x18\x01 \x01(\x03R\x05tagId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n\ncreated_by\x18\x03 \x01(\x03R\tcreatedBy\x12\x39\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\"J\n\x0fTagListResponse\x12\x37\n\x04tags\x18\x01 \x03(\x0b\x32#.bannote.scheduleservice.tag.v1.TagR\x04tagsb\x06proto3"
+descriptor_data = "\n\x1eschedule-service/tag/tag.proto\x12\x1e\x62\x61nnote.scheduleservice.tag.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8a\x01\n\x03Tag\x12\x15\n\x06tag_id\x18\x01 \x01(\x03R\x05tagId\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12\x1d\n\ncreated_by\x18\x03 \x01(\x03R\tcreatedBy\x12\x39\n\ncreated_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\"\xbb\x01\n\x0fTagListResponse\x12\x37\n\x04tags\x18\x01 \x03(\x0b\x32#.bannote.scheduleservice.tag.v1.TagR\x04tags\x12\x12\n\x04page\x18\x02 \x01(\x05R\x04page\x12\x19\n\x08per_page\x18\x03 \x01(\x05R\x07perPage\x12\x1f\n\x0btotal_count\x18\x04 \x01(\x03R\ntotalCount\x12\x1f\n\x0btotal_pages\x18\x05 \x01(\x05R\ntotalPagesb\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)

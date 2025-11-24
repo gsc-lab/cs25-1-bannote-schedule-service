@@ -51,7 +51,7 @@ module Bannote::Scheduleservice::Tag::V1
         end
 
         tag =
-          if tag_id.present? && tag_id > 0
+          if tag_id && tag_id > 0
             ::Tag.find_by(id: tag_id)
           elsif tag_name.present?
             ::Tag.find_by(name: tag_name)
@@ -72,39 +72,45 @@ module Bannote::Scheduleservice::Tag::V1
 
     # 3. 태그 목록 조회
     def get_tag_list(request, call)
+      user_id, role = RoleHelper.verify_user(call)
+
       tag_name = request.tag_name&.strip
+      page = request.page > 0 ? request.page : 1
+      per_page = request.per_page > 0 ? request.per_page : 10
 
-      begin # 예외가 발생할 수 있는 코드
-        user_id, role = RoleHelper.verify_user(call)
-
-        # 관리자 이상일 경우
-        if RoleHelper.has_authority?(role, 4)
-          tags =::Tag.all.order(created_at: :desc)
-        else
-          # 일반 사용자는 본인 + 공개 그룹
-          tags = ::Tag.joins(:groups)
-              .where(groups: { is_public: true })
-              .distinct
-              .order(created_at: :desc)
-        end
-
-      rescue GRPC::Unauthenticated
-         tags = ::Tag.where(is_public: true).order(created_at: :desc)
+      # 권한에 따라 조회 범위 구분
+      if RoleHelper.has_authority?(role, 4)
+        tags = ::Tag.all
+      else
+        tags = ::Tag.joins(:groups)
+                    .where(groups: { is_public: true })
+                    .distinct
       end
-      
+
+      # 검색 조건
       if tag_name.present?
-         tags = tags.where("name LIKE ?", "%#{tag_name}%")
+        tags = tags.where("name LIKE ?", "%#{tag_name}%")
       end
-      
-      tags = tags.order(created_at: :desc)
+
+      total_count = tags.count
+      total_pages = (total_count / per_page.to_f).ceil
+
+      paginated_tags = tags
+                        .order(created_at: :desc)
+                        .limit(per_page)
+                        .offset((page - 1) * per_page)
+
+      grpc_tags = paginated_tags.map { |t| build_tag_response(t) }
 
       Bannote::Scheduleservice::Tag::V1::GetTagListResponse.new(
         tag_list_response: Bannote::Scheduleservice::Tag::V1::TagListResponse.new(
-          tags: tags.map { |t| build_tag_response(t) }
+          tags: grpc_tags,
+          page: page,
+          per_page: per_page,
+          total_count: total_count,
+          total_pages: total_pages
         )
       )
-    rescue => e
-      raise GRPC::Internal.new("태그 목록 조회 실패: #{e.message}")
     end
 
     # 4. 태그 삭제
