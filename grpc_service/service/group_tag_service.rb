@@ -21,30 +21,44 @@ module Bannote
             raise GRPC::InvalidArgument.new("group_id는 필수 입니다") if group_id.nil? || group_id <= 0
             raise GRPC::InvalidArgument.new("tag_id는 필수입니다.") if tag_id.nil? || tag_id <= 0
 
-             # 3. 인증
-             user_id, role = RoleHelper.verify_user(call)
+            # 3. 인증
+            user_id, role = RoleHelper.verify_user(call)
 
-            # 4. 태그 여부
-            group = ::Group.find_by(id: request.group_id)
-            tag = ::Tag.find_by(id: request.tag_id)
-            # 못찾을경우
+            # 4. DB 조회
+            group = ::Group.find_by(id: group_id)
+            tag = ::Tag.find_by(id: tag_id)
+
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
             raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") if tag.nil?
-            # 권한 검증
-            if group.group_type_id == 1 ||group.group_type_id == 2
+
+            # 권한 검증 (정규/긴급 = 조교 이상 / 개인 그룹 = 생성자 + 멤버)
+            case group.group_type_id
+            when 1, 2
+              # 정규/긴급 → 조교 이상
               unless RoleHelper.has_authority?(role, 4)
-                raise GRPC::PermissionDenind.new("정규수업은 조교이상 권한있습니다")
+                raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상 권한 필요")
+              end
+
+            when 3
+              # 개인 그룹 → 생성자 또는 그룹 멤버
+              member_ids = group.user_groups.pluck(:user_id)
+              unless group.created_by == user_id || member_ids.include?(user_id)
+                raise GRPC::PermissionDenied.new("개인 그룹은 생성자 또는 구성원만 태그를 추가할 수 있습니다.")
               end
             end
-
-            # TODO: 이 부분은 UserGroup이 GroupTag 생성 시 암시적으로 생성되는 문제를 해결하기 위한 임시 코드입니다. 추후 UserGroup 생성 로직을 명확히 해야 합니다.
-            # UserGroup이 없으면 생성
-            unless ::UserGroup.exists?(user_id: user_id, group_id: group_id)
-              ::UserGroup.create!(user_id: user_id, group_id: group_id, created_at: Time.now)
+            # 태그 중복 방지 (필수)
+            if group.group_tags.exists?(tag_id: tag_id)
+              raise GRPC::AlreadyExists.new("해당 태그는 이미 그룹에 연결되어 있습니다.")
             end
 
+            # UserGroup 자동 생성 
+            unless ::UserGroup.exists?(user_id: user_id, group_id: group_id)
+              ::UserGroup.create!(user_id: user_id, group_id: group_id, created_at: Time.current)
+            end
+            # 관계 생성
             group_tag = group.group_tags.create!(tag: tag)
 
+            # 응답
             Bannote::Scheduleservice::GroupTag::V1::AddTagToGroupResponse.new(
               group_tag: Bannote::Scheduleservice::GroupTag::V1::GroupTag.new(
                 group_id: group_tag.group_id,
@@ -101,13 +115,17 @@ module Bannote
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
             # 4.권한 검증
-            if group.group_type_id == 1
+            case group.group_type_id
+            when 1, 2
+              # 긴급 / 정규 → 조교 이상
               unless RoleHelper.has_authority?(role, 4)
-                raise GRPC::PermissionDenied.new("정규 수업 그룹은 조교 이상만 태그를 삭제할 수 있습니다")
+                raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상만 태그를 삭제할 수 있습니다.")
               end
-            else
+
+            when 3
+              # 개인 그룹 → 생성자만
               unless group.created_by == user_id
-                raise GRPC::PermissionDenied.new("개인그룹은  생성자만 태그를 삭제 할 수있습니다")
+                raise GRPC::PermissionDenied.new("개인 그룹은 생성자만 태그를 삭제할 수 있습니다.")
               end
             end
 
@@ -122,7 +140,7 @@ module Bannote
           rescue GRPC::BadStatus => e
             raise e
           rescue => e
-            warn "[ERROR TRACE] #{e.backtrace.first(5)}"
+            warn "#{e.backtrace.first(5)}"
             raise GRPC::Internal.new("그룹 태그 삭제 실패: #{e.message}")
           end
         end
