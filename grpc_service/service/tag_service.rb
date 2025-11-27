@@ -37,37 +37,41 @@ module Bannote::Scheduleservice::Tag::V1
     
     #단일 태그 조회
     def get_tag(request, call)
-        user_id, role = RoleHelper.verify_user(call)
+      user_id, role = RoleHelper.verify_user(call)
 
-        tag_id = request.tag_id
-        tag_name = request.name&.strip
+      tag_id = request.tag_id
+      tag_name = request.name&.strip
 
-        if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
-          raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
+      if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
+        raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
+      end
+
+      # 태그 조회
+      tag =
+        if tag_id && tag_id > 0
+          ::Tag.find_by(id: tag_id)
+        elsif tag_name.present?
+          ::Tag.find_by(name: tag_name)
         end
 
-        unless RoleHelper.has_authority?(role, 4)
-          raise GRPC::PermissionDenied.new("조교이상만 권한 있습니다")
-        end
+      raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
 
-        tag =
-          if tag_id && tag_id > 0
-            ::Tag.find_by(id: tag_id)
-          elsif tag_name.present?
-            ::Tag.find_by(name: tag_name)
-          end
+      # 학생 권한: 공개 그룹 태그인지 체크
+      unless RoleHelper.has_authority?(role, 4)
+        is_public = ::Group
+              .joins(:group_tags)
+              .where(is_public: true, group_tags: { tag_id: tag.id })
+              .exists?
+              
+        raise GRPC::PermissionDenied.new("공개 태그만 조회할 수 있습니다.") unless is_public
+      end
 
-        raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
+      Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(
+        tag: build_tag_response(tag)
+      )
 
-        Bannote::Scheduleservice::Tag::V1::GetTagResponse.new(
-          tag: build_tag_response(tag)
-        )
-
-      rescue ActiveRecord::RecordNotFound
-        raise GRPC::NotFound.new("태그를 찾을 수 없습니다.")
-
-      rescue => e
-        raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
+    rescue => e
+      raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
     end
 
     # 3. 태그 목록 조회
@@ -124,7 +128,7 @@ module Bannote::Scheduleservice::Tag::V1
 
       # 3. 권한검사
       unless RoleHelper.has_authority?(role, 4)
-        raise GRPC::PermissionDenied.new("삭제할 태그를 찾을 수 있습니다")
+        raise GRPC::PermissionDenied.new("태그삭제는 조교 이상만 가능합니다")
       end
 
       tag = ::Tag.find_by(id: tag_id)
