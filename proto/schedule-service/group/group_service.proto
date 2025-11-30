@@ -15,7 +15,9 @@ service GroupService {
   rpc GetGroup(GetGroupRequest) returns (GetGroupResponse);
   rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse);
   rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse);
+  rpc GetManyGroups(GetManyGroupsRequest) returns (GetManyGroupsResponse);
 }
+
 
 // ================================
 // Group 관련 요청 메시지 정의
@@ -81,4 +83,12 @@ message UpdateGroupResponse {
 
 message GetGroupListResponse {
   GroupListResponse group_list_response = 1;
+}
+
+message GetManyGroupsRequest {
+  repeated int64 group_ids = 1;
+}
+
+message GetManyGroupsResponse {
+  repeated Group groups = 1;
 }
