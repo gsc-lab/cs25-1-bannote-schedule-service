@@ -69,8 +69,10 @@ module Bannote
                   # 5. 태그 연결(하나의 테이블은 여러개의 태그를 가질수있기때문에)
                   if request.tag_ids && !request.tag_ids.empty?
                     tag_ids = request.tag_ids.to_a.map!(&:to_i)
+                    
                     puts " Processing tag_ids: #{request.tag_ids.join(', ')}"
                     puts "DEBUG: request.tag_ids: #{request.tag_ids.inspect}, type: #{request.tag_ids.class}"
+
                     existing_tags = ::Tag.where(id: tag_ids)
                     puts "DEBUG: existing_tags: #{existing_tags.inspect}, length: #{existing_tags.length}"
                     if existing_tags.length != request.tag_ids.length
@@ -107,35 +109,34 @@ module Bannote
                 
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, call)
+            puts ">>> DEBUG tag_names = #{request.tag_names.inspect}"
+            puts ">>> DEBUG tag_ids = #{request.tag_ids.inspect}"
+
             user_id, role = RoleHelper.verify_user(call)
+
             groups_query = ::Group.all
 
-            # 기본 필터
+            # 1. 기본 필터
             group_type_id = request.group_type_id if request.has_group_type_id?
-            is_public     = request.is_public     if request.has_is_public?
+            is_public  = request.is_public if request.has_is_public?
             is_published  = request.is_published  if request.has_is_published?
 
             groups_query = groups_query.where(group_type_id: group_type_id) if group_type_id
             groups_query = groups_query.where(is_public: is_public) if request.has_is_public?
             groups_query = groups_query.where(is_published: is_published) if request.has_is_published?
 
-            # 태그 이름으로 필터링 (OR 조건)
+            # 2. tag_names AND 조건
             tag_names = request.tag_names.to_a.reject(&:blank?)
-            if tag_names.any?
-              tag_ids_from_name = tag_names.flat_map do |name|
-                ::Tag.where("name LIKE ?", "%#{name}%").pluck(:id)
-              end.uniq
 
-              if tag_ids_from_name.any?
-                groups_query = groups_query.joins(:group_tags).where(group_tags: { tag_id: tag_ids_from_name })
-              else
-                # 이름과 일치하는 태그가 없으면 결과 없음
-                groups_query = groups_query.none
+            if tag_names.any?
+              tag_names.each do |name|
+                groups_query = groups_query.where("EXISTS (SELECT 1 FROM group_tags gt INNER JOIN tags t ON t.id = gt.tag_id WHERE gt.group_id = groups.id AND t.name = ?)", name)
               end
             end
 
-            # 태그 ID로 필터링 (AND 조건)
+            # 3. tag_ids AND 조건 (기존 로직 그대로)
             tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
+
             if tag_ids.any?
               groups_query =
                 groups_query
@@ -147,14 +148,15 @@ module Bannote
 
             groups = groups_query.distinct
 
-            # 페이징 처리 그대로
-            page     = request.page > 0 ? request.page : 1
+            # 4. 페이징 처리
+            page = request.page > 0 ? request.page : 1
             per_page = request.per_page > 0 ? request.per_page : 10
 
-            total_count = groups.count
+            total_count = ::Group.from(groups, :group_subquery).count
             total_pages = (total_count / per_page.to_f).ceil
-            paginated_groups = groups.limit(per_page).offset((page - 1) * page)
+            paginated_groups = groups.limit(per_page).offset((page - 1) * per_page)
 
+            # 5. 북마크 여부
             bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
 
             grpc_groups = paginated_groups.map do |g|
@@ -173,7 +175,6 @@ module Bannote
               )
             )
           end
-
 
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
           def get_group(request, call)
@@ -266,6 +267,7 @@ module Bannote
               raise GRPC::Internal.new("그룹 수정 실패: #{e.message}")
           end
           
+          #groud_id 여러개 검색하면 group_name 들고옴
           def get_many_groups(request, call)
             user_id, role = RoleHelper.verify_user(call)
 
@@ -285,7 +287,7 @@ module Bannote
             )
           end
 
-          # 5. 그룹 삭제
+          # 6. 그룹 삭제
           def delete_group(request, call)
             # 1. 파싱
             group_id = request.group_id
