@@ -40,6 +40,7 @@ message GetGroupListRequest {
   optional bool is_public = 4;
   optional bool is_published = 5;
   repeated int64 tag_ids = 6;
+  repeated string tag_names = 7;  
 }
 
 // 그룹 상세보기 기능 추가 시 

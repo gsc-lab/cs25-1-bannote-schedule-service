@@ -21,6 +21,7 @@ module Bannote
             rpc :GetTag, ::Bannote::Scheduleservice::Tag::V1::GetTagRequest, ::Bannote::Scheduleservice::Tag::V1::GetTagResponse
             rpc :GetTagList, ::Bannote::Scheduleservice::Tag::V1::GetTagListRequest, ::Bannote::Scheduleservice::Tag::V1::GetTagListResponse
             rpc :DeleteTag, ::Bannote::Scheduleservice::Tag::V1::DeleteTagRequest, ::Bannote::Scheduleservice::Tag::V1::DeleteTagResponse
+            rpc :GetManyTags, ::Bannote::Scheduleservice::Tag::V1::GetManyTagsRequest, ::Bannote::Scheduleservice::Tag::V1::GetManyTagsResponse
           end
 
           Stub = Service.rpc_stub_class

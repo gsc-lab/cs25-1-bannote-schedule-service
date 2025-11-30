@@ -1,4 +1,3 @@
-
 require_relative '../../config/environment'
 require 'grpc'
 require 'group/group_pb'
@@ -106,61 +105,73 @@ module Bannote
                   raise GRPC::Internal.new("그룹 생성 실패: #{e.message}")
                 end
                 
-          # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
-          def get_group_list(request, call)
-            user_id, role = RoleHelper.verify_user(call)
+            # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
+            def get_group_list(request, call)
+              user_id, role = RoleHelper.verify_user(call)
 
-            # 1. 필터를 적용하여 기본 그룹 목록 조회
-            groups_query = ::Group.all
+              # 1. 기본 그룹 목록
+              groups_query = ::Group.all
 
-            # 2. 필터 적용
-            group_type_id = request.group_type_id if request.has_group_type_id?
-            is_public = request.is_public if request.has_is_public?
-            is_published = request.is_published if request.has_is_published?
-            tag_ids = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
+              # 2. 기본 필터
+              group_type_id = request.group_type_id if request.has_group_type_id?
+              is_public     = request.is_public     if request.has_is_public?
+              is_published  = request.is_published  if request.has_is_published?
 
-            groups_query = groups_query.where(group_type_id: group_type_id) if group_type_id
-            groups_query = groups_query.where(is_public: is_public) if request.has_is_public?
-            groups_query = groups_query.where(is_published: is_published) if request.has_is_published?
+              tag_ids   = request.tag_ids.to_a.map(&:to_i).reject(&:zero?)
+              tag_names = request.tag_names.to_a.reject(&:blank?)
 
-            if tag_ids.any?
-              groups_query = groups_query.joins(:group_tags).where(group_tags: { tag_id: tag_ids })
-            end
-            
-            # DB에서 필터링된 그룹들을 가져옴 (태그 join으로 중복이 생길 수 있으므로 distinct 사용)
-            groups = groups_query.distinct
+              groups_query = groups_query.where(group_type_id: group_type_id) if group_type_id
+              groups_query = groups_query.where(is_public: is_public) if request.has_is_public?
+              groups_query = groups_query.where(is_published: is_published) if request.has_is_published?
 
-            #페이지네이션 로직
-            page = request.page > 0 ? request.page : 1
-            per_page = request.per_page > 0 ? request.per_page : 10
+              if tag_names.any?
+                or_conditions = tag_names.map { |n| "name LIKE ?" }.join(" OR ")
+                or_values = tag_names.map { |n| "%#{n}%" }
 
-            total_count = groups.count
-            total_pages = (total_count / per_page.to_f).ceil
+                # 중요: ::Tag 로 변경해야 autoload 충돌 없음
+                tag_ids_from_name = ::Tag.where(or_conditions, *or_values).pluck(:id)
 
-            paginated_groups = groups.limit(per_page).offset((page - 1) * per_page)
+                tag_ids = (tag_ids + tag_ids_from_name).uniq
+              end
 
+              if tag_ids.any?
+                groups_query =
+                  groups_query
+                    .joins(:group_tags)
+                    .where(group_tags: { tag_id: tag_ids })
+                    .group("groups.id")
+                    .having("COUNT(DISTINCT group_tags.tag_id) = ?", tag_ids.length)
+              end
 
-            # 3. 사용자가 가입한 그룹 ID 목록을 한 번의 쿼리로 가져옴
-            bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
+              groups = groups_query.distinct
 
-            # 4. 응답 변환 (Ruby에서 bookmark 설정)
-            grpc_groups = paginated_groups.map do |g|
-              grpc_group = build_group_response(g)
-              grpc_group.bookmark = bookmarked_group_ids.include?(g.id)
-              grpc_group
-            end
+              # 페이징
+              page     = request.page > 0 ? request.page : 1
+              per_page = request.per_page > 0 ? request.per_page : 10
 
-            # 5. gRPC 응답 반환
-            Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
-              group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
-                groups: grpc_groups,
-                page: page,
-                per_page: per_page,
-                total_count: total_count,
-                total_pages: total_pages
+              total_count = groups.count
+              total_pages = (total_count / per_page.to_f).ceil
+              paginated_groups = groups.limit(per_page).offset((page - 1) * per_page)
+
+              # 북마크 여부
+              bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
+
+              grpc_groups = paginated_groups.map do |g|
+                grpc_group = build_group_response(g)
+                grpc_group.bookmark = bookmarked_group_ids.include?(g.id)
+                grpc_group
+              end
+
+              Bannote::Scheduleservice::Group::V1::GetGroupListResponse.new(
+                group_list_response: Bannote::Scheduleservice::Group::V1::GroupListResponse.new(
+                  groups: grpc_groups,
+                  page: page,
+                  per_page: per_page,
+                  total_count: total_count,
+                  total_pages: total_pages
+                )
               )
-            )
-          end
+            end
 
           # 3. 그룹 상세 조회(특정 그룹 하나의 상세정보조회)
           def get_group(request, call)

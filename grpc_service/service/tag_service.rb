@@ -40,20 +40,9 @@ module Bannote::Scheduleservice::Tag::V1
       user_id, role = RoleHelper.verify_user(call)
 
       tag_id = request.tag_id
-      tag_name = request.name&.strip
+      raise GRPC::InvalidArgument.new("tag_id는 반드시 필요합니다.") if tag_id.nil? || tag_id <= 0
 
-      if (tag_id.nil? || tag_id <= 0) && (tag_name.nil? || tag_name.empty?)
-        raise GRPC::InvalidArgument.new("tag_id 또는 name 중 하나는 반드시 필요합니다.")
-      end
-
-      # 태그 조회
-      tag =
-        if tag_id && tag_id > 0
-          ::Tag.find_by(id: tag_id)
-        elsif tag_name.present?
-          ::Tag.find_by(name: tag_name)
-        end
-
+      tag = ::Tag.find_by(id: tag_id)
       raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
 
       # 학생 권한: 공개 그룹 태그인지 체크
@@ -78,7 +67,6 @@ module Bannote::Scheduleservice::Tag::V1
     def get_tag_list(request, call)
       user_id, role = RoleHelper.verify_user(call)
 
-      tag_name = request.tag_name&.strip
       page = request.page > 0 ? request.page : 1
       per_page = request.per_page > 0 ? request.per_page : 10
 
@@ -89,11 +77,6 @@ module Bannote::Scheduleservice::Tag::V1
         tags = ::Tag.joins(:groups)
                     .where(groups: { is_public: true })
                     .distinct
-      end
-
-      # 검색 조건
-      if tag_name.present?
-        tags = tags.where("name LIKE ?", "%#{tag_name}%")
       end
 
       total_count = tags.count
@@ -114,6 +97,25 @@ module Bannote::Scheduleservice::Tag::V1
           total_count: total_count,
           total_pages: total_pages
         )
+      )
+    end
+
+    #태그 상세 조회
+   def get_many_tags(request, call)
+      user_id, role = RoleHelper.verify_user(call)
+
+      tag_ids = request.tag_ids
+      raise GRPC::InvalidArgument.new("tag_ids는 필수입니다.") if tag_ids.empty?
+
+      # 문자열로 오더라도 int 변환해서 안전하게 맞춤
+      tag_ids = tag_ids.map(&:to_i)
+
+      tags = ::Tag.where(id: tag_ids)
+
+      grpc_tags = tags.map { |t| build_tag_response(t) }
+
+      Bannote::Scheduleservice::Tag::V1::GetManyTagsResponse.new(
+        tags: grpc_tags
       )
     end
 
@@ -140,6 +142,8 @@ module Bannote::Scheduleservice::Tag::V1
     rescue => e
       raise GRPC::Internal.new("태그 삭제 실패: #{e.message}")
     end
+
+
 
     private
 
