@@ -4,8 +4,6 @@ package bannote.scheduleservice.group.v1;
 
 import "schedule-service/group/group.proto";
 
-
-
 // ================================
 // Group Service 정의
 // ================================
@@ -16,11 +14,14 @@ service GroupService {
   rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse);
   rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse);
   rpc GetManyGroups(GetManyGroupsRequest) returns (GetManyGroupsResponse);
+
+  rpc AddGroupEditor(AddGroupEditorRequest) returns (AddGroupEditorResponse);
+  rpc RemoveGroupEditor(RemoveGroupEditorRequest) returns (RemoveGroupEditorResponse);
+  rpc ListGroupEditors(ListGroupEditorsRequest) returns (ListGroupEditorsResponse);
 }
 
-
 // ================================
-// Group 관련 요청 메시지 정의
+// 요청 메시지들
 // ================================
 message CreateGroupRequest {
   int64 group_type_id = 1;
@@ -35,17 +36,16 @@ message CreateGroupRequest {
 }
 
 message GetGroupListRequest {
-  int32 page = 1;  
+  int32 page = 1;
   int32 per_page = 2;
 
   optional int64 group_type_id = 3;
   optional bool is_public = 4;
   optional bool is_published = 5;
   repeated int64 tag_ids = 6;
-  repeated string tag_names = 7;  
+  repeated string tag_names = 7;
 }
 
-// 그룹 상세보기 기능 추가 시 
 message GetGroupRequest {
   int64 group_id = 1;
 }
@@ -91,4 +91,33 @@ message GetManyGroupsRequest {
 
 message GetManyGroupsResponse {
   repeated Group groups = 1;
+}
+
+// ================================
+// 편집자 관리용
+// ================================
+message AddGroupEditorRequest {
+  int64 group_id = 1;
+  int64 user_id = 2;
+}
+
+message AddGroupEditorResponse {
+  bool success = 1;
+}
+
+message RemoveGroupEditorRequest {
+  int64 group_id = 1;
+  int64 user_id = 2;
+}
+
+message RemoveGroupEditorResponse {
+  bool success = 1;
+}
+
+message ListGroupEditorsRequest {
+  int64 group_id = 1;
+}
+
+message ListGroupEditorsResponse {
+  repeated int64 editor_ids = 1;
 }

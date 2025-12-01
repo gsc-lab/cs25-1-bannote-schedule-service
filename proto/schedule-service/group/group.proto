@@ -11,6 +11,7 @@ import "schedule-service/tag/tag.proto";
 // ================================
 // Group 관련 메시지 정의
 // ================================
+
 message Group {
   int64 group_id = 1;
   string group_code = 2;
@@ -29,6 +30,7 @@ message Group {
   int64 deleted_by = 15;
   repeated bannote.scheduleservice.tag.v1.Tag tags = 16;
   bool bookmark = 17;
+
 }
 
 message GroupListResponse {

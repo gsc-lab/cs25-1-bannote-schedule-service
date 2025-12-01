@@ -63,6 +63,8 @@ module Bannote
                   # 생성자를 해당 그룹의 맴버로 자동 등록
                   # ::UserGroup.create!(user_id: user_id, group_id: group.id) 나중에 이거를 주석 해제해야함
                   ::UserGroup.create!(user_id: user_id, group_id: group.id, created_at: Time.current) # 이거 나중에 삭제해야함
+                  # 생성자를 그룹 편집자로 등록
+                  ::GroupUpdate.create!(group_id: group.id, user_id: user_id)
 
                   puts "UserGroup created for user_id-#{user_id}, group_id=#{group.id}"
 
@@ -209,22 +211,15 @@ module Bannote
             group = ::Group.find_by(id: group_id)
             raise GRPC::NotFound.new("삭제할 그룹을 찾을 수 없습니다") unless group
 
+            is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+            raise GRPC::PermissionDenied.new("그룹 멤버가 아닙니다.") unless is_member
+
             # 4. 권한 검증
-            permission_label = group.group_permission&.permission
-            case permission_label
-            when "1", "2"
-              # 긴급·정규 그룹 → 조교 이상만 수정 가능
-              unless RoleHelper.has_authority?(role, 4)
-                raise GRPC::PermissionDenied.new("긴급/정규 그룹은 조교 이상만 수정할 수 있습니다.")
-              end
-            when "3"
-              # 개인 그룹 → 구성원만 수정 가능
-              member_ids = group.user_groups.pluck(:user_id)
-              unless member_ids.include?(user_id)
-                raise GRPC::PermissionDenied.new("이 그룹의 구성원이 아닙니다.")
-              end
-            else
-              raise GRPC::InvalidArgument.new("유효하지 않은 권한 값입니다.")
+            is_creator = (group.created_by == user_id)
+            is_editor = ::GroupUpdate.exists?(group_id: group.id, user_id: user_id)
+
+            unless is_creator || is_editor
+              raise  GRPC::PermissionDenied.new("이 그룹을 수정할 권한이 없습니다.")
             end
 
             # 5. 수정 필드
@@ -323,6 +318,69 @@ module Bannote
               raise e
             rescue => e
               raise GRPC::Internal.new("그룹 삭제 실패: #{e.message}")
+          end
+
+          #그룹 편집자 추가
+          def add_group_editor(request, call)
+            user_id, role = RoleHelper.verify_user(call)
+
+            group = ::Group.find_by(id: request.group_id)
+            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+
+            # 생성자만 편집자 추가 가능
+            unless group.created_by == user_id
+              raise GRPC::PermissionDenied.new("편집자를 추가할 권한이 없습니다.")
+            end
+
+              # 추가될 유저가 그룹 멤버인지 확인
+            unless ::UserGroup.exists?(user_id: request.user_id, group_id: group.id)
+              raise GRPC::PermissionDenied.new("해당 유저는 그룹 멤버가 아닙니다.")
+            end
+
+            # 중복 체크
+            if ::GroupUpdate.exists?(group_id: group.id, user_id: request.user_id)
+              raise GRPC::AlreadyExists.new("이미 편집자로 등록된 유저입니다.")
+            end
+
+            ::GroupUpdate.create!(
+              group_id: group.id,
+              user_id: request.user_id,
+              created_at: Time.current
+            )
+
+            AddGroupEditorResponse.new(success: true)
+          end
+          #그룹 편집자 삭제
+          def remove_group_editor(request, call)
+            user_id, role = RoleHelper.verify_user(call)
+
+            group = ::Group.find_by(id: request.group_id)
+            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+
+            # 생성자만 삭제 가능
+            unless group.created_by == user_id
+              raise GRPC::PermissionDenied.new("편집자권한을 제거할 수 없습니다.")
+            end
+
+            record = ::GroupUpdate.find_by(group_id: group.id, user_id: request.user_id)
+            raise GRPC::NotFound.new("해당 사용자는 편집자가 아닙니다") unless record
+
+            record.destroy!
+
+            RemoveGroupEditorResponse.new(success: true)
+          end
+
+          #편집자 리스트
+          def list_group_editors(request, call)
+            user_id, role = RoleHelper.verify_user(call)
+
+            group = ::Group.find_by(id: request.group_id)
+            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+
+            # 편집자의 user_id 배열만 가져오기
+            editor_ids = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
+
+            ListGroupEditorsResponse.new(editor_ids: editor_ids)
           end
 
           private # 외부에서 직접 호출 못함

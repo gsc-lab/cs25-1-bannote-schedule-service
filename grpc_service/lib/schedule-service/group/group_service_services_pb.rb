@@ -26,6 +26,9 @@ module Bannote
             rpc :UpdateGroup, ::Bannote::Scheduleservice::Group::V1::UpdateGroupRequest, ::Bannote::Scheduleservice::Group::V1::UpdateGroupResponse
             rpc :DeleteGroup, ::Bannote::Scheduleservice::Group::V1::DeleteGroupRequest, ::Bannote::Scheduleservice::Group::V1::DeleteGroupResponse
             rpc :GetManyGroups, ::Bannote::Scheduleservice::Group::V1::GetManyGroupsRequest, ::Bannote::Scheduleservice::Group::V1::GetManyGroupsResponse
+            rpc :AddGroupEditor, ::Bannote::Scheduleservice::Group::V1::AddGroupEditorRequest, ::Bannote::Scheduleservice::Group::V1::AddGroupEditorResponse
+            rpc :RemoveGroupEditor, ::Bannote::Scheduleservice::Group::V1::RemoveGroupEditorRequest, ::Bannote::Scheduleservice::Group::V1::RemoveGroupEditorResponse
+            rpc :ListGroupEditors, ::Bannote::Scheduleservice::Group::V1::ListGroupEditorsRequest, ::Bannote::Scheduleservice::Group::V1::ListGroupEditorsResponse
           end
 
           Stub = Service.rpc_stub_class

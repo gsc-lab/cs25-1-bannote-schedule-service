@@ -5,12 +5,12 @@ require 'role/service_services_pb'
 module RoleHelper
   # 역할별 권한 레벨 테이블
   ROLE_LEVELS = {
-    "STUDENT"   => 1,
-    "DOORKEEPER"    => 2,
-    "CLASS_REP"    => 3,
+    "STUDENT" => 1,
+    "DOORKEEPER"  => 2,
+    "CLASS_REP"  => 3,
     "TA" => 4,
     "PROFESSOR" => 5,
-    "ADMIN"     => 6
+    "ADMIN"  => 6
   }.freeze
 
   # 인증 + 유저 조회
