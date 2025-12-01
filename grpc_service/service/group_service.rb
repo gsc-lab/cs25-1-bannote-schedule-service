@@ -76,25 +76,13 @@ module Bannote
                     puts "DEBUG: request.tag_ids: #{request.tag_ids.inspect}, type: #{request.tag_ids.class}"
 
                     existing_tags = ::Tag.where(id: tag_ids)
-                    puts "DEBUG: existing_tags: #{existing_tags.inspect}, length: #{existing_tags.length}"
-                    if existing_tags.length != request.tag_ids.length
-                      missing_tag_ids = request.tag_ids - existing_tags.pluck(:id)
-                      raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing_tag_ids.join(', ')}")
-                    end
-                  # 태그 연결
-                  if tag_ids.present?
-                    existing_tags = ::Tag.where(id: tag_ids)
                     if existing_tags.size != tag_ids.size
                       missing = tag_ids - existing_tags.pluck(:id)
                       raise GRPC::NotFound.new("다음 태그를 찾을 수 없습니다: #{missing.join(', ')}")
                     end
 
                     tag_ids.each do |tag_id|
-                        # ::GroupTag.create!(group_id: group.id, tag_id: tag_id) 나중에 주석 삭제
-                        ::GroupTag.create!(
-                          group_id: group.id,
-                          tag_id: tag_id,
-                        )
+                        ::GroupTag.create!(group_id: group.id,tag_id: tag_id,)
                       end
                   end
 

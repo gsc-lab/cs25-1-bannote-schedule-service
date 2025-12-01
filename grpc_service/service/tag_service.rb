@@ -18,7 +18,7 @@ module Bannote::Scheduleservice::Tag::V1
 
       # 관리자 이상만 생성 가능
       unless RoleHelper.has_authority?(role, 4)
-        raise GRPC::PermissionDenied.new("태그 생성은 조교님 이상 가능합니다.")
+        raise GRPC::PermissionDenied.new("태그 생성은 조교님 이y상 가능합니다.")
       end
 
       # tag이름 중복시

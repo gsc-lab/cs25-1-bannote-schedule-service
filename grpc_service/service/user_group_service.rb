@@ -177,7 +177,6 @@ module Bannote
               message
             )
           end
-
         end
       end
     end
