@@ -78,7 +78,6 @@ module Bannote::Scheduleservice::Tag::V1
                     .where(groups: { is_public: true })
                     .distinct
       end
-
       total_count = tags.count
       total_pages = (total_count / per_page.to_f).ceil
 
@@ -113,7 +112,6 @@ module Bannote::Scheduleservice::Tag::V1
       tags = ::Tag.where(id: tag_ids)
 
       grpc_tags = tags.map { |t| build_tag_response(t) }
-
       Bannote::Scheduleservice::Tag::V1::GetManyTagsResponse.new(
         tags: grpc_tags
       )
@@ -142,11 +140,7 @@ module Bannote::Scheduleservice::Tag::V1
     rescue => e
       raise GRPC::Internal.new("태그 삭제 실패: #{e.message}")
     end
-
-
-
     private
-
     # ActiveRecord::Tag 모델을 Grpc::Tag::TagResponse 메시지로 변환
     def build_tag_response(tag)
       created_at_ts = Google::Protobuf::Timestamp.new
