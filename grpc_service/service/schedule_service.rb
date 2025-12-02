@@ -113,11 +113,6 @@ module Bannote::Scheduleservice::Schedule::V1
       # 무조건 최신순 정렬
       schedules = schedules.order(created_at: :desc)
 
-      # 일정 자체가 없을떄 예외처리
-      if schedules.empty?
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "조회 가능한 일정이 없습니다.")
-      end
-
       schedule_responses = schedules.map do |s|
         link = s.schedule_link
         Bannote::Scheduleservice::Schedule::V1::Schedule.new(

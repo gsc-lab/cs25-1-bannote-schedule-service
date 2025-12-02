@@ -40,4 +40,11 @@ module RoleHelper
     [ user.user_number, user_role ]
   end
 
+  def self.has_authority?(user_role, required_role)
+    user_level = ROLE_LEVELS[user_role] || 0
+    req_level = ROLE_LEVELS[required_role] || 999
+    user_level >= req_level
+  end
+
+
 end
