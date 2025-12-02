@@ -8,7 +8,7 @@ require 'google/protobuf/timestamp_pb'
 require 'schedule-service/group/group_pb'
 
 
-descriptor_data = "\n,schedule-service/user_group/user_group.proto\x12\x1f\x62\x61nnote.scheduleservice.user.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\"schedule-service/group/group.proto\"\x87\x01\n\x16\x41\x64\x64UserToGroupResponse\x12\x17\n\x07user_id\x18\x01 \x01(\x03R\x06userId\x12\x19\n\x08group_id\x18\x02 \x01(\x03R\x07groupId\x12\x39\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\"h\n\x17GetUsersInGroupResponse\x12M\n\x05users\x18\x01 \x03(\x0b\x32\x37.bannote.scheduleservice.user.v1.AddUserToGroupResponseR\x05users\"Z\n\x17GetGroupsOfUserResponse\x12?\n\x06groups\x18\x01 \x03(\x0b\x32\'.bannote.scheduleservice.group.v1.GroupR\x06groupsb\x06proto3"
+descriptor_data = "\n,schedule-service/user_group/user_group.proto\x12\x1f\x62\x61nnote.scheduleservice.user.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\"schedule-service/group/group.proto\"\x87\x01\n\x16\x41\x64\x64UserToGroupResponse\x12\x17\n\x07user_id\x18\x01 \x01(\tR\x06userId\x12\x19\n\x08group_id\x18\x02 \x01(\x03R\x07groupId\x12\x39\n\ncreated_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tcreatedAt\"h\n\x17GetUsersInGroupResponse\x12M\n\x05users\x18\x01 \x03(\x0b\x32\x37.bannote.scheduleservice.user.v1.AddUserToGroupResponseR\x05users\"Z\n\x17GetGroupsOfUserResponse\x12?\n\x06groups\x18\x01 \x03(\x0b\x32\'.bannote.scheduleservice.group.v1.GroupR\x06groupsb\x06proto3"
 
 pool = ::Google::Protobuf::DescriptorPool.generated_pool
 pool.add_serialized_file(descriptor_data)

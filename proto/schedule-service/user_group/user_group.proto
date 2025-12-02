@@ -6,7 +6,7 @@ import "google/protobuf/timestamp.proto";
 import "schedule-service/group/group.proto";
 
 message AddUserToGroupResponse {
-  int64 user_id = 1;
+  string user_id = 1;
   int64 group_id = 2;
   google.protobuf.Timestamp created_at = 3;
 }

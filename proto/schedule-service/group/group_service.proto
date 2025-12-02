@@ -98,7 +98,7 @@ message GetManyGroupsResponse {
 // ================================
 message AddGroupEditorRequest {
   int64 group_id = 1;
-  int64 user_id = 2;
+  string user_id = 2;
 }
 
 message AddGroupEditorResponse {
@@ -107,7 +107,7 @@ message AddGroupEditorResponse {
 
 message RemoveGroupEditorRequest {
   int64 group_id = 1;
-  int64 user_id = 2;
+  string user_id = 2;
 }
 
 message RemoveGroupEditorResponse {
@@ -119,5 +119,5 @@ message ListGroupEditorsRequest {
 }
 
 message ListGroupEditorsResponse {
-  repeated int64 editor_ids = 1;
+  repeated string editor_ids = 1;
 }

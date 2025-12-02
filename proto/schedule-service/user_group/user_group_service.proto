@@ -15,7 +15,7 @@ service UserGroupService {
 // AddUserToGroup
 message AddUserToGroupRequest {
   int64 group_id = 1;
-  int64 user_id = 2;
+  string user_id = 2;
 }
 
 // GetUsersInGroup
@@ -25,13 +25,13 @@ message GetUsersInGroupRequest {
 
 // GetGroupsOfUser
 message GetGroupsOfUserRequest {
-  int64 user_id = 1;
+  string user_id = 1;
 }
 
 // RemoveUserFromGroup
 message RemoveUserFromGroupRequest {
   int64 group_id = 1;
-  int64 user_id = 2;
+  string user_id = 2;
 }
 
 message RemoveUserFromGroupResponse {

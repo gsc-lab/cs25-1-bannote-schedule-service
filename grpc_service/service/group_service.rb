@@ -304,47 +304,64 @@ module Bannote
 
           #그룹 편집자 추가
           def add_group_editor(request, call)
-            user_id, role = RoleHelper.verify_user(call)
+            # 현재 로그인한 사용자 (user_id는 PK)
+            current_user_id, role = RoleHelper.verify_user(call)
 
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            # 생성자만 편집자 추가 가능
-            unless group.created_by == user_id
+            # 생성자가 아니면 편집자 추가 불가
+            unless group.created_by == current_user_id
               raise GRPC::PermissionDenied.new("편집자를 추가할 권한이 없습니다.")
             end
 
-              # 추가될 유저가 그룹 멤버인지 확인
-            unless ::UserGroup.exists?(user_id: request.user_id, group_id: group.id)
+            # user_id 는 user_number 이므로 PK 변환 필요
+            raw_user_number = request.user_id           
+            target_user = ::User.find_by(user_number: raw_user_number)
+            raise GRPC::NotFound.new("해당 유저를 찾을 수 없습니다.") unless target_user
+
+            target_user_id = target_user.id                
+
+            # 그룹 멤버인지 체크 (PK 기준)
+            unless ::UserGroup.exists?(user_id: target_user_id, group_id: group.id)
               raise GRPC::PermissionDenied.new("해당 유저는 그룹 멤버가 아닙니다.")
             end
 
-            # 중복 체크
-            if ::GroupUpdate.exists?(group_id: group.id, user_id: request.user_id)
+            # 중복 편집자 방지
+            if ::GroupUpdate.exists?(group_id: group.id, user_id: target_user_id)
               raise GRPC::AlreadyExists.new("이미 편집자로 등록된 유저입니다.")
             end
 
+            # 편집자 등록
             ::GroupUpdate.create!(
               group_id: group.id,
-              user_id: request.user_id,
+              user_id: target_user_id,
               created_at: Time.current
             )
 
             AddGroupEditorResponse.new(success: true)
           end
+
+
           #그룹 편집자 삭제
           def remove_group_editor(request, call)
-            user_id, role = RoleHelper.verify_user(call)
+            current_user_id, role = RoleHelper.verify_user(call)
 
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            # 생성자만 삭제 가능
-            unless group.created_by == user_id
+            # 생성자만 제거 가능
+            unless group.created_by == current_user_id
               raise GRPC::PermissionDenied.new("편집자권한을 제거할 수 없습니다.")
             end
 
-            record = ::GroupUpdate.find_by(group_id: group.id, user_id: request.user_id)
+            raw_user_number = request.user_id
+            target_user = ::User.find_by(user_number: raw_user_number)
+            raise GRPC::NotFound.new("해당 유저를 찾을 수 없습니다.") unless target_user
+
+            target_user_id = target_user.id
+
+            record = ::GroupUpdate.find_by(group_id: group.id, user_id: target_user_id)
             raise GRPC::NotFound.new("해당 사용자는 편집자가 아닙니다") unless record
 
             record.destroy!
@@ -352,17 +369,23 @@ module Bannote
             RemoveGroupEditorResponse.new(success: true)
           end
 
+
           #편집자 리스트
           def list_group_editors(request, call)
-            user_id, role = RoleHelper.verify_user(call)
+            current_user_id, role = RoleHelper.verify_user(call)
 
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            # 편집자의 user_id 배열만 가져오기
-            editor_ids = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
+            editor_pks = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
 
-            ListGroupEditorsResponse.new(editor_ids: editor_ids)
+            # --------------------------------------
+            # 수정 ③ PK → user_number 로 변환해서 돌려줘야 함
+            # --------------------------------------
+            editor_numbers = ::User.where(id: editor_pks).pluck(:user_number)
+            # --------------------------------------
+
+            ListGroupEditorsResponse.new(editor_ids: editor_numbers)
           end
 
           private # 외부에서 직접 호출 못함

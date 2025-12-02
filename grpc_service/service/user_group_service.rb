@@ -25,7 +25,7 @@ module Bannote
       module V1
         class UserGroupServiceHandler < UserGroupService::Service
           # 1. 유저를 그룹에 추가
-          def add_user_to_group(request, call)
+           def add_user_to_group(request, call)
             current_user_id, role = RoleHelper.verify_user(call)
 
             user = ::User.find_by(id: request.user_id)
@@ -60,6 +60,8 @@ module Bannote
               group_id: relation.group_id
             )
           end
+          
+          
 
           # 2. 특정 그룹의 전체 멤버 조회
           def get_users_in_group(request, call)
@@ -87,8 +89,8 @@ module Bannote
 
             users = group.users.map do |u|
               AddUserToGroupResponse.new(
-                user_id: u.id,
-                group_id: group.id
+                user_id: u.id.to_s,
+                group_id: group.id.to_s
               )
             end
 
@@ -100,12 +102,15 @@ module Bannote
           # 3. 특정 유저가 속한 모든 그룹 반환
           def get_groups_of_user(request, call)
             current_user_id, role = RoleHelper.verify_user(call)
-
-            user = ::User.find_by(id: request.user_id)
+            
+            raw_user_number = request.user_id.to_s.strip
+            user = ::User.find_by(user_number: raw_user_number)
             raise_bad(:NOT_FOUND, "유저를 찾지 못했습니다.") unless user
 
+            user_id_int = user.id
+
             # 학생은 본인만 조회 가능
-            if role == "STUDENT" && current_user_id != user.id
+            if role == "STUDENT" && current_user_id != user_id_int
               raise_bad(:PERMISSION_DENIED, "학생은 다른 유저의 그룹 목록을 조회할 수 없습니다.")
             end
             # 조교 이상 → 전체 조회 가능
@@ -137,14 +142,16 @@ module Bannote
           # 4. 유저를 그룹에서 제거
           def remove_user_from_group(request, call)
             current_user_id, role = RoleHelper.verify_user(call)
-
-            user = ::User.find_by(id: request.user_id)
+            raw_user_number = request.user_id.to_s.strip
+            user = ::User.find_by(user_number: raw_user_number)
             raise_bad(:NOT_FOUND, "User가 존재하지 않습니다.") unless user
+
+            user_id_int = user.id
 
             group = ::Group.find_by(id: request.group_id)
             raise_bad(:NOT_FOUND, "Group이 존재하지 않습니다.") unless group
 
-            relation = ::UserGroup.find_by(user_id: request.user_id, group_id: request.group_id)
+            relation = ::UserGroup.find_by(user_id: user_id_int, group_id: request.group_id)
             raise_bad(:NOT_FOUND, "User는 이 그룹에 속해 있지 않습니다.") unless relation
 
             permission_label = group.group_permission&.permission.to_s

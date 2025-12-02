@@ -16,7 +16,7 @@ module RoleHelper
   # 인증 + 유저 조회
   def self.verify_user(call)
     user_code = call.metadata["x-user-code"]
-    user_role = call.metadata["x-user-role"]
+    user_role = call.metadata["x-user-role"]&.upcase   
 
     raise GRPC::BadStatus.new_status_exception(
       GRPC::Core::StatusCodes::UNAUTHENTICATED,
@@ -30,9 +30,7 @@ module RoleHelper
       "해당 사용자를 찾을 수 없습니다."
     ) if user.nil?
 
-    # DB에 없어도 임시로 user_id = 0 으로 통과시킴
-    user_id = user ? user.id : 0
-    [ user_id, user_role ]
+    [ user.id, user_role ]
   end
 
   # 권한 확인 (레벨 비교 방식으로 수정)
