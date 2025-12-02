@@ -30,6 +30,7 @@ module Bannote
 
             # 요청 user_id = 학번(user_number)
             requested_number = request.user_id.to_s.strip
+            puts "#{request}"
             puts "[DEBUG] 요청받은 user_number = #{requested_number}"
 
             # user_number로 조회
@@ -59,7 +60,7 @@ module Bannote
             # 응답도 user_number
             AddUserToGroupResponse.new(
               user_id: user.user_number,
-              group_id: group.id.to_s
+              group_id: group.id
             )
           end
 
@@ -90,7 +91,7 @@ module Bannote
             users = group.users.map do |u|
               AddUserToGroupResponse.new(
                 user_id: u.user_number,
-                group_id: group.id.to_s
+                group_id: group.id
               )
             end
 
@@ -143,8 +144,6 @@ module Bannote
         # end
           def get_groups_of_user(request, call)
             current_user_number, role = RoleHelper.verify_user(call)
-
-            # 들어온 user_id (Postman이 0009 → 9로 변환해도 문제없음)
             raw_user_number = request.user_id.to_s.strip
 
             puts "[DEBUG] 요청 user_number(raw): #{raw_user_number}"
@@ -188,43 +187,43 @@ module Bannote
 
           # 4. 유저를 그룹에서 제거
           def remove_user_from_group(request, call)
-            current_user_number, role = RoleHelper.verify_user(call)
+          current_user_number, role = RoleHelper.verify_user(call)
 
-            # user_number 로 조회
-            raw_user_number = request.user_id.to_s.strip
-            user = ::User.find_by(user_number: raw_user_number)
-            raise_bad(:NOT_FOUND, "User가 존재하지 않습니다.") unless user
+          # user_number 로 조회
+          raw_user_number = request.user_id.to_s.strip
+          user = ::User.find_by(user_number: raw_user_number)
+          raise_bad(:NOT_FOUND, "User가 존재하지 않습니다.") unless user
 
-            # 그룹 조회
-            group = ::Group.find_by(id: request.group_id)
-            raise_bad(:NOT_FOUND, "Group이 존재하지 않습니다.") unless group
+          # 그룹 조회
+          group = ::Group.find_by(id: request.group_id)
+          raise_bad(:NOT_FOUND, "Group이 존재하지 않습니다.") unless group
 
-            # 학번(user_number)로 relation 검색 
-            relation = ::UserGroup.find_by(
-              user_id: user.user_number,
-              group_id: request.group_id
-            )
-            raise_bad(:NOT_FOUND, "User는 이 그룹에 속해 있지 않습니다.") unless relation
+          # 학번(user_number)로 relation 검색 (중요!)
+          relation = ::UserGroup.find_by(
+            user_id: user.user_number,
+            group_id: request.group_id
+          )
+          raise_bad(:NOT_FOUND, "User는 이 그룹에 속해 있지 않습니다.") unless relation
 
-            permission_label = group.group_permission&.permission.to_s
+          permission_label = group.group_permission&.permission.to_s
 
-            case permission_label
-            when "1"
-              unless ["TA", "PROFESSOR", "ADMIN"].include?(role)
-                raise_bad(:PERMISSION_DENIED, "긴급 그룹은 조교 이상만 멤버를 삭제할 수 있습니다.")
-              end
-            when "2", "3"
-              if role == "STUDENT" && current_user_number.to_s != user.user_number.to_s
-                raise_bad(:PERMISSION_DENIED, "학생은 다른 유저를 제거할 수 없습니다.")
-              end
-            else
-              raise_bad(:INVALID_ARGUMENT, "유효하지 않은 그룹 권한입니다.")
+          case permission_label
+          when "1"
+            unless ["TA", "PROFESSOR", "ADMIN"].include?(role)
+              raise_bad(:PERMISSION_DENIED, "긴급 그룹은 조교 이상만 멤버를 삭제할 수 있습니다.")
             end
-
-            relation.destroy!
-
-            RemoveUserFromGroupResponse.new(success: true)
+          when "2", "3"
+            if role == "STUDENT" && current_user_number.to_s != user.user_number.to_s
+              raise_bad(:PERMISSION_DENIED, "학생은 다른 유저를 제거할 수 없습니다.")
+            end
+          else
+            raise_bad(:INVALID_ARGUMENT, "유효하지 않은 그룹 권한입니다.")
           end
+
+          relation.destroy!
+
+          RemoveUserFromGroupResponse.new(success: true)
+        end
 
           # 공통 에러 함수
           private
