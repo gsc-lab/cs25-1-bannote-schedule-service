@@ -200,7 +200,7 @@ module Bannote::Scheduleservice::Schedule::V1
         is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
         unless is_member
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 수정할 수 없습니다.")
-        endW
+        end
       end
 
       # 일정 수정
