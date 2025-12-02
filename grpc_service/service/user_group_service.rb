@@ -62,7 +62,6 @@ module Bannote
           end
           
           
-
           # 2. 특정 그룹의 전체 멤버 조회
           def get_users_in_group(request, call)
             current_user_id, role = RoleHelper.verify_user(call)
@@ -104,7 +103,7 @@ module Bannote
             current_user_id, role = RoleHelper.verify_user(call)
             
             raw_user_number = request.user_id.to_s.strip
-            user = ::User.find_by(user_number: raw_user_number)
+            user = ::User.find_by(id: request.user_id)
             raise_bad(:NOT_FOUND, "유저를 찾지 못했습니다.") unless user
 
             user_id_int = user.id
@@ -142,16 +141,14 @@ module Bannote
           # 4. 유저를 그룹에서 제거
           def remove_user_from_group(request, call)
             current_user_id, role = RoleHelper.verify_user(call)
-            raw_user_number = request.user_id.to_s.strip
-            user = ::User.find_by(user_number: raw_user_number)
-            raise_bad(:NOT_FOUND, "User가 존재하지 않습니다.") unless user
 
-            user_id_int = user.id
+            user = ::User.find_by(id: request.user_id)
+            raise_bad(:NOT_FOUND, "User가 존재하지 않습니다.") unless user
 
             group = ::Group.find_by(id: request.group_id)
             raise_bad(:NOT_FOUND, "Group이 존재하지 않습니다.") unless group
 
-            relation = ::UserGroup.find_by(user_id: user_id_int, group_id: request.group_id)
+            relation = ::UserGroup.find_by(user_id: user.id, group_id: request.group_id)
             raise_bad(:NOT_FOUND, "User는 이 그룹에 속해 있지 않습니다.") unless relation
 
             permission_label = group.group_permission&.permission.to_s
@@ -174,6 +171,7 @@ module Bannote
 
             RemoveUserFromGroupResponse.new(success: true)
           end
+
 
           # 공통 에러 함수
           private
