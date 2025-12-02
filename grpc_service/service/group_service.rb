@@ -303,39 +303,75 @@ module Bannote
           end
 
           #그룹 편집자 추가
-          def add_group_editor(request, call)
-            # 현재 로그인한 사용자 (user_id는 PK)
-            current_user_id, role = RoleHelper.verify_user(call)
+          # def add_group_editor(request, call)
+          #   # 현재 로그인한 사용자 (user_id는 PK)
+          #   current_user_id, role = RoleHelper.verify_user(call)
 
+          #   group = ::Group.find_by(id: request.group_id)
+          #   raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+
+          #   # 생성자가 아니면 편집자 추가 불가
+          #   unless group.created_by == current_user_id
+          #     raise GRPC::PermissionDenied.new("편집자를 추가할 권한이 없습니다.")
+          #   end
+
+          #   # user_id 는 user_number 이므로 PK 변환 필요
+          #   raw_user_number = request.user_id           
+          #   target_user = ::User.find_by(user_number: raw_user_number)
+          #   raise GRPC::NotFound.new("해당 유저를 찾을 수 없습니다.") unless target_user
+
+          #   target_user_id = target_user.id                
+
+          #   # 그룹 멤버인지 체크 (PK 기준)
+          #   unless ::UserGroup.exists?(user_id: target_user_id, group_id: group.id)
+          #     raise GRPC::PermissionDenied.new("해당 유저는 그룹 멤버가 아닙니다.")
+          #   end
+
+          #   # 중복 편집자 방지
+          #   if ::GroupUpdate.exists?(group_id: group.id, user_id: target_user_id)
+          #     raise GRPC::AlreadyExists.new("이미 편집자로 등록된 유저입니다.")
+          #   end
+
+          #   # 편집자 등록
+          #   ::GroupUpdate.create!(
+          #     group_id: group.id,
+          #     user_id: target_user_id,
+          #     created_at: Time.current
+          #   )
+
+          #   AddGroupEditorResponse.new(success: true)
+          # end
+          def add_group_editor(request, call)
+            current_user_number, role = RoleHelper.verify_user(call)
+
+            # 그룹 조회
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            # 생성자가 아니면 편집자 추가 불가
-            unless group.created_by == current_user_id
+            # 생성자가 아니면 추가 불가
+            unless group.created_by.to_s == current_user_number.to_s
               raise GRPC::PermissionDenied.new("편집자를 추가할 권한이 없습니다.")
             end
 
-            # user_id 는 user_number 이므로 PK 변환 필요
-            raw_user_number = request.user_id           
+            # request.user_id = user_number
+            raw_user_number = request.user_id.to_s.strip
             target_user = ::User.find_by(user_number: raw_user_number)
             raise GRPC::NotFound.new("해당 유저를 찾을 수 없습니다.") unless target_user
 
-            target_user_id = target_user.id                
-
-            # 그룹 멤버인지 체크 (PK 기준)
-            unless ::UserGroup.exists?(user_id: target_user_id, group_id: group.id)
+            # 그룹 멤버인지 user_number 기준으로 체크
+            unless ::UserGroup.exists?(user_id: raw_user_number, group_id: group.id)
               raise GRPC::PermissionDenied.new("해당 유저는 그룹 멤버가 아닙니다.")
             end
 
-            # 중복 편집자 방지
-            if ::GroupUpdate.exists?(group_id: group.id, user_id: target_user_id)
+            # 이미 편집자인지 확인 (user_number 기준)
+            if ::GroupUpdate.exists?(group_id: group.id, user_id: raw_user_number)
               raise GRPC::AlreadyExists.new("이미 편집자로 등록된 유저입니다.")
             end
 
-            # 편집자 등록
+            # 편집자 등록 (user_number 저장)
             ::GroupUpdate.create!(
               group_id: group.id,
-              user_id: target_user_id,
+              user_id: raw_user_number,
               created_at: Time.current
             )
 
@@ -343,25 +379,27 @@ module Bannote
           end
 
 
-          #그룹 편집자 삭제
+         # 그룹 편집자 삭제
           def remove_group_editor(request, call)
-            current_user_id, role = RoleHelper.verify_user(call)
+            current_user_number, role = RoleHelper.verify_user(call)
 
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            # 생성자만 제거 가능
-            unless group.created_by == current_user_id
+            # 생성자만 제거 가능 (user_number 기준)
+            unless group.created_by.to_s == current_user_number.to_s
               raise GRPC::PermissionDenied.new("편집자권한을 제거할 수 없습니다.")
             end
 
-            raw_user_number = request.user_id
+            # request.user_id = user_number
+            raw_user_number = request.user_id.to_s.strip
+
+            # target user 존재 여부 체크
             target_user = ::User.find_by(user_number: raw_user_number)
             raise GRPC::NotFound.new("해당 유저를 찾을 수 없습니다.") unless target_user
 
-            target_user_id = target_user.id
-
-            record = ::GroupUpdate.find_by(group_id: group.id, user_id: target_user_id)
+            # GroupUpdate.user_id 컬럼에는 user_number 문자열이 저장됨
+            record = ::GroupUpdate.find_by(group_id: group.id, user_id: raw_user_number)
             raise GRPC::NotFound.new("해당 사용자는 편집자가 아닙니다") unless record
 
             record.destroy!
@@ -369,24 +407,31 @@ module Bannote
             RemoveGroupEditorResponse.new(success: true)
           end
 
+          # #편집자 리스트
+          # def list_group_editors(request, call)
+          #   current_user_id, role = RoleHelper.verify_user(call)
 
-          #편집자 리스트
+          #   group = ::Group.find_by(id: request.group_id)
+          #   raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
+
+          #   editor_pks = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
+          #   editor_numbers = ::User.where(id: editor_pks).pluck(:user_number)
+    
+          #   ListGroupEditorsResponse.new(editor_ids: editor_numbers)
+          # end
+
           def list_group_editors(request, call)
-            current_user_id, role = RoleHelper.verify_user(call)
+            current_user_number, role = RoleHelper.verify_user(call)
 
             group = ::Group.find_by(id: request.group_id)
             raise GRPC::NotFound.new("그룹을 찾을 수 없습니다") unless group
 
-            editor_pks = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
-
-            # --------------------------------------
-            # 수정 ③ PK → user_number 로 변환해서 돌려줘야 함
-            # --------------------------------------
-            editor_numbers = ::User.where(id: editor_pks).pluck(:user_number)
-            # --------------------------------------
+            # GroupUpdate.user_id = user_number 이므로 그대로 반환
+            editor_numbers = ::GroupUpdate.where(group_id: group.id).pluck(:user_id)
 
             ListGroupEditorsResponse.new(editor_ids: editor_numbers)
           end
+
 
           private # 외부에서 직접 호출 못함
           # ActiveRecord 모델 객체를 gRPC 응답 메시지로 변환하는 헬퍼 메소드

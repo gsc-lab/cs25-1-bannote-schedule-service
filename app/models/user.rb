@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  has_many :user_groups, dependent: :destroy
+  has_many :user_groups, primary_key: :user_number, foreign_key: :user_id
   has_many :groups, through: :user_groups
 
   belongs_to :department,

@@ -9,25 +9,27 @@ require_relative '../helpers/Role_helper'
 # #최근에 저장된 모듈scheulde을 들고오기떄문에 삭제 해주고
 # ::Object.send(:remove_const, :Schedule) if defined?(Schedule)
 # Rails 모델을 명시적으로 alias로 등록
-AppSchedule      = ::Schedule
+AppSchedule  = ::Schedule
 AppScheduleLink  = ::ScheduleLink
 
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
     def create_schedule(request, call)
-      user_id, role = RoleHelper.verify_user(call)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
+      current_user_number, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
 
       group = ::Group.find_by(id: request.group_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "그룹을 찾을 수 없습니다.") if group.nil?
 
       # 권한 검증
-      if group.group_type_id.in?([ 1, 2 ])
+      if group.group_type_id.in?([1, 2])
+        # 조교 이상 권한 체크는 그대로
         unless RoleHelper.has_authority?(role, 4)
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
         end
       else
-        is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+        # user_number 기반으로 수정
+        is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
         raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 생성할 수 없습니다.") unless is_member
       end
 
@@ -51,7 +53,7 @@ module Bannote::Scheduleservice::Schedule::V1
           start_time: Time.at(link_data.start_time.seconds),
           end_time: Time.at(link_data.end_time.seconds),
           is_allday: link_data.is_allday || false,
-          created_by: user_id
+          created_by: current_user_number
         )
 
         # 1-2. 일정 생성
@@ -63,7 +65,7 @@ module Bannote::Scheduleservice::Schedule::V1
           start_date: Time.at(request.start_date.seconds),
           end_date: Time.at(request.end_date.seconds),
           memo: request.comment,
-          created_by: user_id
+          created_by: current_user_number
         )
 
         # 응답
@@ -83,9 +85,11 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 2. 일정 목록 조회 (그룹 ID별)
     def get_schedule_list(request, call)
-      user_id, role = RoleHelper.verify_user(call)
-      user = ::User.find_by(id: user_id)
-      allowed_group_ids = user ? user.groups.pluck(:id) : []
+      current_user_number, role = RoleHelper.verify_user(call)
+      current_user = ::User.find_by(user_number: current_user_number)
+
+      allowed_group_ids = current_user ? current_user.groups.pluck(:id) : []
+
 
       # 요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
       target_group_ids = request.group_ids & allowed_group_ids
@@ -153,14 +157,15 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 3. 일정 상세 조회
     def get_schedule(request, call)
-      user_id, role = RoleHelper.verify_user(call)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
+      current_user_number, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
 
       schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
 
       group = schedule.group
-      is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+
+      is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
       unless is_member
         raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 조회할 수 없습니다.")
       end
@@ -180,7 +185,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 4. 일정 수정
     def update_schedule(request, call)
-      user_id, role = RoleHelper.verify_user(call)
+      current_user_number, role = RoleHelper.verify_user(call)
 
       schedule = ::Schedule.find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
@@ -191,16 +196,19 @@ module Bannote::Scheduleservice::Schedule::V1
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 수정 가능합니다.")
         end
       else
-        is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+        current_user_pk = ::User.find_by(user_number: current_user_number)&.id
+        is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
         unless is_member
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 수정할 수 없습니다.")
-        end
+        endW
       end
 
       # 일정 수정
       schedule.update!(
         memo: request.comment.presence || schedule.memo,
-        color: request.is_highlighted ? "highlight" : "normal"
+        color: request.is_highlighted ? "highlight" : "normal",
+        updated_by: current_user_number
+
       )
 
       # 응답
@@ -220,9 +228,9 @@ module Bannote::Scheduleservice::Schedule::V1
     end
 
     # 5. 일정 삭제 (ScheduleLink도 함께 삭제)
-    def delete_schedule(request, call)
-      user_id, role = RoleHelper.verify_user(call)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
+    def delete_schedule_link(request, call)
+      current_user_number, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
 
       schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
@@ -236,7 +244,8 @@ module Bannote::Scheduleservice::Schedule::V1
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 삭제할 수 있습니다.")
         end
       else # 개인그룹
-        is_member = ::UserGroup.exists?(user_id: user_id, group_id: group.id)
+        current_user_pk = ::User.find_by(user_number: current_user_number)&.id
+        is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
         unless is_member
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 삭제할 수 없습니다.")
         end
@@ -255,8 +264,8 @@ module Bannote::Scheduleservice::Schedule::V1
 
     # 개인 그룹 그룹은 등록되어있지만 스케줄링크는 안들고있을경우
     def delete_schedule_link(request, call)
-      user_id, role = RoleHelper.verify_user(call)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if user_id.nil?
+      current_user_number, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
 
       schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
       raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
@@ -273,8 +282,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       ActiveRecord::Base.transaction do
         # soft delete 방식
-        link.update!(deleted_at: Time.current, deleted_by: user_id)
-
+        link.update!(deleted_at: Time.current, deleted_by: current_user_number)
         # 스케줄에서 연결 제거
         schedule.update!(schedule_link_id: nil)
       end
