@@ -35,7 +35,7 @@ module Bannote
             case group.group_type_id
             when 1, 2
               # 정규/긴급 → 조교 이상
-              unless RoleHelper.has_authority?(role, 4)
+              unless RoleHelper.has_authority?(role, "TA")
                 raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상 권한 필요")
               end
 
@@ -118,7 +118,7 @@ module Bannote
             case group.group_type_id
             when 1, 2
               # 긴급 / 정규 → 조교 이상
-              unless RoleHelper.has_authority?(role, 4)
+              unless RoleHelper.has_authority?(role, "TA")
                 raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상만 태그를 삭제할 수 있습니다.")
               end
 

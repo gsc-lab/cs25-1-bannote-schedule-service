@@ -4,6 +4,7 @@ require 'schedule/schedule_service_services_pb'
 require 'google/protobuf/well_known_types'
 require 'securerandom'
 require_relative '../helpers/Role_helper'
+require_relative '../helpers/Datetime_helper'
 
 
 # #최근에 저장된 모듈scheulde을 들고오기떄문에 삭제 해주고
@@ -15,72 +16,76 @@ AppScheduleLink  = ::ScheduleLink
 module Bannote::Scheduleservice::Schedule::V1
   class ScheduleServiceHandler < ScheduleService::Service
     def create_schedule(request, call)
-        current_user_number, role = RoleHelper.verify_user(call)
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
+      current_user_number, role = RoleHelper.verify_user(call)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
 
-        group = ::Group.find_by(id: request.group_id)
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "그룹을 찾을 수 없습니다.") if group.nil?
+      group = ::Group.find_by(id: request.group_id)
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "그룹을 찾을 수 없습니다.") if group.nil?
 
-        # 권한 검증
-        if group.group_type_id.in?([1, 2])
-          # 조교 이상 권한 체크는 그대로
-          unless RoleHelper.has_authority?(role, 4)
-            raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
-          end
-        else
-          # user_number 기반으로 수정
-          is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
-          raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 생성할 수 없습니다.") unless is_member
+      # 권한 검증
+      if group.group_type_id.in?([1, 2])
+        unless RoleHelper.has_authority?(role, "TA")
+          raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹은 조교 이상만 일정을 생성할 수 있습니다.")
         end
+      else
+        is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
+        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 생성할 수 없습니다.") unless is_member
+      end
 
-        # 유효성 검증
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "시간 입력은 필수입니다.") if request.start_date.nil? || request.end_date.nil?
+      # 유효성 검증
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "시간 입력은 필수입니다.") if request.start_date.blank? || request.end_date.blank?
 
-        start_time = Time.at(request.start_date.seconds)
-        end_time = Time.at(request.end_date.seconds)
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "종료시간은 시작시간 이후여야 합니다.") if end_time <= start_time
+      start_time = parse_datetime(request.start_date)
+      end_time  = parse_datetime(request.end_date)
 
-        link_data = request.link
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "링크 데이터가 필요합니다.") if link_data.nil?
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "종료시간은 시작시간 이후여야 합니다.") if end_time <= start_time
 
-        ActiveRecord::Base.transaction do
-          # 1-1. 일정 링크 생성
-          link = ::ScheduleLink.create!(
-            title: link_data.title,
-            description: link_data.description,
-            place_id: link_data.place_id.presence,
-            place_text: link_data.place_text.presence,
-            start_time: Time.at(link_data.start_time.seconds),
-            end_time: Time.at(link_data.end_time.seconds),
-            is_allday: link_data.is_allday || false,
-            created_by: current_user_number
+      # 링크 데이터
+      link_data = request.link
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, "링크 데이터가 필요합니다.") if link_data.nil?
+
+      link_start = parse_datetime(link_data.start_time)
+      link_end  = parse_datetime(link_data.end_time)
+
+      ActiveRecord::Base.transaction do
+        # 1. 일정 링크 생성
+        link = ::ScheduleLink.create!(
+          title: link_data.title,
+          description: link_data.description,
+          place_id: link_data.place_id.presence,
+          place_text: link_data.place_text.presence,
+          start_time: link_start,
+          end_time: link_end,
+          is_allday: link_data.is_allday || false,
+          created_by: current_user_number
+        )
+
+        # 2. 일정 생성
+        schedule = ::Schedule.create!(
+          group_id: group.id,
+          schedule_link_id: link.id,
+          schedule_code: SecureRandom.hex(8),
+          color: request.is_highlighted ? "highlight" : "normal",
+          start_date: start_time,
+          end_date: end_time,
+          memo: request.comment,
+          created_by: current_user_number
+        )
+
+        # 3. 응답 
+        CreateScheduleResponse.new(
+          schedule: Schedule.new(
+            schedule_id: schedule.id,
+            code: schedule.schedule_code,
+            group_id: schedule.group_id,
+            schedule_link_id: schedule.schedule_link_id,
+            created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
           )
+        )
+      end
 
-          # 1-2. 일정 생성
-          schedule = ::Schedule.create!(
-            group_id: group.id,
-            schedule_link_id: link.id,
-            schedule_code: SecureRandom.hex(8),
-            color: request.is_highlighted ? "highlight" : "normal",
-            start_date: Time.at(request.start_date.seconds),
-            end_date: Time.at(request.end_date.seconds),
-            memo: request.comment,
-            created_by: current_user_number
-          )
-
-          # 응답
-          CreateScheduleResponse.new(
-            schedule: Schedule.new(
-              schedule_id: schedule.id,
-              code: schedule.schedule_code,
-              group_id: schedule.group_id,
-              schedule_link_id: schedule.schedule_link_id,
-              created_at: Google::Protobuf::Timestamp.new(seconds: schedule.created_at.to_i)
-            )
-          )
-        end
-      rescue => e
-        raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, e.message)
+    rescue => e
+      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INVALID_ARGUMENT, e.message)
     end
 
     # 2. 일정 목록 조회 (그룹 ID별)
@@ -90,7 +95,6 @@ module Bannote::Scheduleservice::Schedule::V1
 
       allowed_group_ids = current_user ? current_user.groups.pluck(:id) : []
 
-
       # 요청된 그룹 중 접근 권한이 가능한 그룹만 필터링
       target_group_ids = request.group_ids & allowed_group_ids
       if target_group_ids.empty?
@@ -98,8 +102,8 @@ module Bannote::Scheduleservice::Schedule::V1
       end
 
       # 요청된 기간
-      start_time = request.start_date&.seconds ? Time.at(request.start_date.seconds) : nil
-      end_time   = request.end_date&.seconds ? Time.at(request.end_date.seconds) : nil
+      start_time = request.start_date.present? ? parse_datetime(request.start_date) : nil
+      end_time = request.end_date.present? ? parse_datetime(request.end_date) : nil
 
       # 일정 조회 -> 검색 조건 필터링 (join)
       schedules = AppSchedule.includes(:schedule_link)
@@ -107,7 +111,7 @@ module Bannote::Scheduleservice::Schedule::V1
                               .where(group_id: target_group_ids)
 
       # 기간 필터링
-      schedules = schedules.where("schedules.end_date >= ?", start_time) if start_time
+      schedules =schedules.where("schedules.end_date >= ?", start_time) if start_time
       schedules = schedules.where("schedules.start_date <= ?", end_time) if end_time
 
       # 무조건 최신순 정렬
@@ -137,7 +141,7 @@ module Bannote::Scheduleservice::Schedule::V1
             place_text: link.place_text,
             description: link.description,
             start_time: link.start_time ? Google::Protobuf::Timestamp.new(seconds: link.start_time.to_i) : nil,
-            end_time:   link.end_time ? Google::Protobuf::Timestamp.new(seconds: link.end_time.to_i) : nil,
+            end_time:  link.end_time ? Google::Protobuf::Timestamp.new(seconds: link.end_time.to_i) : nil,
             is_allday: link.is_allday
           ): nil
         )
@@ -187,7 +191,7 @@ module Bannote::Scheduleservice::Schedule::V1
 
       group = schedule.group
       if group.group_type_id == 1 || group.group_type_id == 2
-        unless RoleHelper.has_authority?(role, 4)
+        unless RoleHelper.has_authority?(role, "TA")
           raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 수정 가능합니다.")
         end
       else
@@ -205,7 +209,6 @@ module Bannote::Scheduleservice::Schedule::V1
         updated_by: current_user_number
 
       )
-
       # 응답
       Bannote::Scheduleservice::Schedule::V1::UpdateScheduleResponse.new(
         schedule: Bannote::Scheduleservice::Schedule::V1::Schedule.new(
@@ -220,41 +223,6 @@ module Bannote::Scheduleservice::Schedule::V1
           updated_at: Google::Protobuf::Timestamp.new(seconds: schedule.updated_at.to_i)
         )
       )
-    end
-
-    # 5. 일정 삭제 (ScheduleLink도 함께 삭제)
-    def delete_schedule_link(request, call)
-      current_user_number, role = RoleHelper.verify_user(call)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::UNAUTHENTICATED, "인증 실패") if current_user_number.nil?
-
-      schedule = ::Schedule.includes(:group, :schedule_link).find_by(id: request.schedule_id)
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::NOT_FOUND, "일정을 찾을 수 없습니다.") if schedule.nil?
-
-      group = schedule.group
-
-      # 권한 검증
-      case group.group_type_id
-      when 1, 2
-        unless RoleHelper.has_authority?(role, 4)
-          raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "정규 수업 그룹의 일정은 조교 이상만 삭제할 수 있습니다.")
-        end
-      else # 개인그룹
-        current_user_pk = ::User.find_by(user_number: current_user_number)&.id
-        is_member = ::UserGroup.exists?(user_id: current_user_number, group_id: group.id)
-        unless is_member
-          raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::PERMISSION_DENIED, "이 그룹에 속하지 않아 일정을 삭제할 수 없습니다.")
-        end
-      end
-
-      ActiveRecord::Base.transaction do
-        schedule.schedule_link&.destroy!
-        schedule.destroy!
-      end
-
-    Bannote::Scheduleservice::Schedule::V1::DeleteScheduleResponse.new(success: true)
-    rescue => e
-      puts "일정 삭제 실패: #{e.message}"
-      raise GRPC::BadStatus.new_status_exception(GRPC::Core::StatusCodes::INTERNAL, "삭제 중 오류 발생: #{e.message}")
     end
 
     # 개인 그룹 그룹은 등록되어있지만 스케줄링크는 안들고있을경우

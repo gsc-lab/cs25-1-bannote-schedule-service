@@ -101,47 +101,6 @@ module Bannote
           end
 
           # 3. 특정 유저가 속한 모든 그룹 반환
-        #  def get_groups_of_user(request, call)
-        #   current_user_number, role = RoleHelper.verify_user(call)
-
-        #   # 요청 user_id = user_number
-        #   raw_user_number = request.user_id.to_s.strip
-
-        #   # user_number 로 유저 찾기
-        #   user = ::User.find_by(user_number: raw_user_number)
-        #   raise_bad(:NOT_FOUND, "유저를 찾지 못했습니다.") unless user
-
-        #   # PK
-        #   user_id_int = user.id
-
-        #   # 학생=본인만 조회 가능
-        #   if role == "STUDENT" && current_user_number.to_s != raw_user_number
-        #     raise_bad(:PERMISSION_DENIED, "학생은 다른 유저의 그룹 목록을 조회할 수 없습니다.")
-        #   end
-
-        #   groups = user.groups.includes(:tags).map do |g|
-        #     tag_responses = g.tags.map do |t|
-        #       Bannote::Scheduleservice::Tag::V1::Tag.new(
-        #         tag_id: t.id,
-        #         name: t.name
-        #       )
-        #     end
-
-        #     Bannote::Scheduleservice::Group::V1::Group.new(
-        #       group_id: g.id,
-        #       group_type_id: g.group_type_id,
-        #       group_name: g.group_name,
-        #       group_description: g.group_description,
-        #       is_public: g.is_public,
-        #       is_published: g.is_published,
-        #       color_default: g.color_default,
-        #       color_highlight: g.color_highlight,
-        #       tags: tag_responses
-        #     )
-        #   end
-
-        #   GetGroupsOfUserResponse.new(groups: groups)
-        # end
           def get_groups_of_user(request, call)
             current_user_number, role = RoleHelper.verify_user(call)
             raw_user_number = request.user_id.to_s.strip
