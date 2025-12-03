@@ -17,7 +17,7 @@ module Bannote::Scheduleservice::Tag::V1
       user_id, role = RoleHelper.verify_user(call)
 
       # 관리자 이상만 생성 가능
-      unless RoleHelper.has_authority?(role,"TA")
+      unless RoleHelper.has_authority?(role,"TA") #TODO: 전체 권한 한번더 검증 및 로직 검사
         raise GRPC::PermissionDenied.new("태그 생성은 조교님 이y상 가능합니다.")
       end
 

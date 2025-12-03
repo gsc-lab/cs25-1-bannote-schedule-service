@@ -157,26 +157,28 @@ module Bannote
           group = ::Group.find_by(id: request.group_id)
           raise_bad(:NOT_FOUND, "Group이 존재하지 않습니다.") unless group
 
-          # 학번(user_number)로 relation 검색 (중요!)
+          # 학번(user_number)로 relation 검색 
           relation = ::UserGroup.find_by(
             user_id: user.user_number,
             group_id: request.group_id
           )
           raise_bad(:NOT_FOUND, "User는 이 그룹에 속해 있지 않습니다.") unless relation
 
-          permission_label = group.group_permission&.permission.to_s
+          group_type = group.group_type_id.to_i
 
-          case permission_label
-          when "1"
-            unless ["TA", "PROFESSOR", "ADMIN"].include?(role)
+          case group_type
+          when 1  # 긴급 그룹
+            unless ["assistant", "professor", "admin"].include?(role.downcase)
               raise_bad(:PERMISSION_DENIED, "긴급 그룹은 조교 이상만 멤버를 삭제할 수 있습니다.")
             end
-          when "2", "3"
-            if role == "STUDENT" && current_user_number.to_s != user.user_number.to_s
+          when 2, 3  # 일반/개인 그룹
+            # 학생인데 다른 사람 삭제하려고 하면 금지
+            if role.downcase == "student" && current_user_number.to_s != user.user_number.to_s
               raise_bad(:PERMISSION_DENIED, "학생은 다른 유저를 제거할 수 없습니다.")
             end
+
           else
-            raise_bad(:INVALID_ARGUMENT, "유효하지 않은 그룹 권한입니다.")
+            raise_bad(:INVALID_ARGUMENT, "유효하지 않은 group_type_id 입니다.")
           end
 
           relation.destroy!
