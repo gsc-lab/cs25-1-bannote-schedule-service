@@ -4,14 +4,15 @@ package bannote.scheduleservice.schedule.v1;
 
 import "google/protobuf/timestamp.proto";
 
+
 message ScheduleLink {
   int64 schedule_link_id = 1; 
   string title = 2;
   optional int64 place_id = 3;
   optional string place_text = 4;
   string description = 5;
-  google.protobuf.Timestamp start_time = 6;
-  google.protobuf.Timestamp end_time = 7;
+  string start_at = 6;  // YYYY-MM-DDTHH:mm
+  string end_at = 7;  // YYYY-MM-DDTHH:mm
   bool is_allday = 8;   
 }
 
@@ -35,4 +36,11 @@ message Schedule {
 
 message ScheduleListResponse {
   repeated Schedule schedules = 1;
+
+  int32 page = 2;            // 현재 페이지
+  int32 per_page = 3;        // 요청한 per_page
+  int64 total_count = 4;     // 전체 스케줄 수
+  int32 total_pages = 5;     // 전체 페이지 수
+
+
 }

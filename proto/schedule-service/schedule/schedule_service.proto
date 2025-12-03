@@ -6,13 +6,14 @@ import "google/protobuf/timestamp.proto";
 import "schedule-service/schedule/schedule.proto";
 
 
+
 service ScheduleService {
   rpc CreateSchedule(CreateScheduleRequest) returns (CreateScheduleResponse);
   rpc GetScheduleList(GetScheduleListRequest) returns (GetScheduleListResponse);
   rpc GetSchedule(GetScheduleRequest) returns (GetScheduleResponse);
   rpc UpdateSchedule(UpdateScheduleRequest) returns (UpdateScheduleResponse);
   rpc DeleteSchedule(DeleteScheduleRequest) returns (DeleteScheduleResponse);
-  //개인 그룹은 그룹만 가질수있고 스케줄은 없을 수 있기떄문에
+  //개인 그룹은 그룹만 가질 수 있고 스케줄은 없을 수 있기떄문에
   rpc DeleteScheduleLink(DeleteScheduleLinkRequest)returns (DeleteScheduleLinkResponse);
 }
 
@@ -23,10 +24,7 @@ message CreateScheduleRequest {
   int64 group_id = 1;
   optional string comment = 2;
   bool is_highlighted = 3;
-  google.protobuf.Timestamp start_date = 4;
-  google.protobuf.Timestamp end_date = 5;
-  int64 created_by = 6;
-  ScheduleLinkData link = 7;
+  ScheduleLinkData link = 4;
 }
 
 message ScheduleLinkData {
@@ -34,14 +32,18 @@ message ScheduleLinkData {
   optional int64 place_id = 2;
   optional string place_text = 3;
   string description = 4;
-  google.protobuf.Timestamp start_time = 5;
-  google.protobuf.Timestamp end_time = 6;
+  string start_at = 5; // YYYY-MM-DDTHH:mm
+  string end_at =6; // YYYY-MM-DDTHH:mm
   bool is_allday = 7;
 }
+
 message GetScheduleListRequest {
   repeated int64 group_ids = 1;
-  optional google.protobuf.Timestamp start_date = 2;
-  optional google.protobuf.Timestamp end_date = 3;
+  optional string start_at = 2;
+  optional string end_at = 3;
+  
+  int32 page = 10;
+  int32 per_page = 11;
 }
 
 message GetScheduleRequest {
@@ -52,6 +54,7 @@ message UpdateScheduleRequest {
   int64 schedule_id = 1;
   optional string comment = 2;
   optional bool is_highlighted = 3;
+  optional ScheduleLinkData link = 4;
 }
 
 message DeleteScheduleRequest {
@@ -61,7 +64,6 @@ message DeleteScheduleRequest {
 message DeleteScheduleResponse {
   bool success = 1;
 }
-
 
 message DeleteScheduleLinkRequest {
   int64 schedule_id = 1;

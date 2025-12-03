@@ -22,7 +22,7 @@ module Bannote
             rpc :GetSchedule, ::Bannote::Scheduleservice::Schedule::V1::GetScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::GetScheduleResponse
             rpc :UpdateSchedule, ::Bannote::Scheduleservice::Schedule::V1::UpdateScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::UpdateScheduleResponse
             rpc :DeleteSchedule, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleRequest, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleResponse
-            # 개인 그룹은 그룹만 가질수있고 스케줄은 없을 수 있기떄문에
+            # 개인 그룹은 그룹만 가질 수 있고 스케줄은 없을 수 있기떄문에
             rpc :DeleteScheduleLink, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleLinkRequest, ::Bannote::Scheduleservice::Schedule::V1::DeleteScheduleLinkResponse
           end
 

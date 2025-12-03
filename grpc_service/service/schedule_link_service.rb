@@ -1,6 +1,5 @@
 require 'grpc'
 require 'schedule_link/schedule_link_pb'
-require 'schedule_link/schedule_link_service_services_pb'
 require 'google/protobuf/well_known_types'
 require_relative '../helpers/Role_helper'
 require_relative '../helpers/Datetime_helper'
@@ -106,8 +105,8 @@ module Bannote
             link_id: link.id,
             title: link.title,
             description: link.description,
-            start_time: link.start_time&.strftime("%Y-%m-%dT%H:%M:%S"), 
-            end_time: link.end_time&.strftime("%Y-%m-%dT%H:%M:%S"),
+            start_at: link.start_at&.strftime("%Y-%m-%dT%H:%M"),
+            end_at: link.end_at&.strftime("%Y-%m-%dT%H:%M"),
             is_allday: link.is_allday,
             created_by: link.created_by
           )
@@ -117,74 +116,68 @@ module Bannote
         end
 
           # 3. 일정 링크 수정
-          def update_schedule_link(request, call)
-            user_id, role = RoleHelper.verify_user(call)
-            raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
+         def update_schedule_link(request, call)
+          user_id, role = RoleHelper.verify_user(call)
+          raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
-            link = ::ScheduleLink.find_by(id: request.link_id)
-            raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
+          link = ::ScheduleLink.find_by(id: request.link_id)
+          raise GRPC::NotFound.new("일정 링크를 찾을 수 없습니다.") if link.nil?
 
-            schedule = ::Schedule.find_by(schedule_link_id: link.id)
-            raise GRPC::NotFound.new("연결된 일정을 찾을 수 없습니다.") if schedule.nil?
-            group = schedule.group
-            raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
+          schedule = ::Schedule.find_by(schedule_link_id: link.id)
+          raise GRPC::NotFound.new("연결된 일정을 찾을 수 없습니다.") if schedule.nil?
 
-            case group.group_type_id
-            when 1, 2
-              unless RoleHelper.has_authority?(role, "TA")
-                raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상만 수정할 수 있습니다.")
-              end
+          group = schedule.group
+          raise GRPC::NotFound.new("그룹을 찾을 수 없습니다.") if group.nil?
 
-            when 3
-              member_numbers = group.user_groups.pluck(:user_id)
-              unless group.created_by.to_s == user_id.to_s || member_numbers.include?(user_id)
-                raise GRPC::PermissionDenied.new("개인 그룹은 생성자 또는 구성원만 수정할 수 있습니다.")
-              end
+          # 권한 확인
+          case group.group_type_id
+          when 1, 2
+            unless RoleHelper.has_authority?(role, "TA")
+              raise GRPC::PermissionDenied.new("정규/긴급 그룹은 조교 이상만 수정할 수 있습니다.")
             end
-
-            start_time =
-              if request.has_start_time?
-                Time.zone.parse(request.start_time)
-              else
-                link.start_time
-              end
-
-            end_time =
-              if request.has_end_time?
-                Time.zone.parse(request.end_time)
-              else
-                link.end_time
-              end
-
-            if request.has_start_time? && request.has_end_time?
-              raise GRPC::InvalidArgument.new("종료 시간은 시작 시간 이후여야 합니다.") if end_time <= start_time
+          when 3
+            member_numbers = group.user_groups.pluck(:user_id) # user_number일 경우 그대로 사용
+            unless member_numbers.include?(user_id)
+              raise GRPC::PermissionDenied.new("개인 그룹은 생성자 또는 구성원만 수정할 수 있습니다.")
             end
-            link.update!(
-              title: request.has_title?   ? request.title  : link.title,
-              place_text: request.has_place_text?  ? request.place_text  : link.place_text,
-              description: request.has_description? ? request.description : link.description,
-              start_time:  start_time,
-              end_time:  end_time,
-              is_allday: request.has_is_allday?  ? request.is_allday : link.is_allday
-            )
-
-            # ===== 응답 =====
-            link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
-              link_id: link.id,
-              schedule_id: schedule.id,
-              title: link.title,
-              description: link.description,
-              place_id: link.place_id,
-              place_text: link.place_text,
-              start_time: link.start_time&.strftime("%Y-%m-%dT%H:%M:%S"),
-              end_time: link.end_time&.strftime("%Y-%m-%dT%H:%M:%S"),
-              is_allday: link.is_allday,
-              created_by: link.created_by
-            )
-            Bannote::Scheduleservice::ScheduleLink::V1::UpdateScheduleLinkResponse.new(
-              schedule_link: link_object
-            )
           end
+
+            # 시간 처리
+            new_start_at = request.has_start_at? ? Time.zone.parse(request.start_at) : link.start_at
+            new_end_at = request.has_end_at?   ? Time.zone.parse(request.end_at)   : link.end_at
+
+            if request.has_start_at? && request.has_end_at?
+              raise GRPC::InvalidArgument.new("종료 시간은 시작 시간 이후여야 합니다.") if new_end_at <= new_start_at
+            end
+
+          link.update!(
+            title:  request.has_title? ? request.title  : link.title,
+            place_text:  request.has_place_text?  ? request.place_text  : link.place_text,
+            description: request.has_description? ? request.description : link.description,
+            start_at: new_start_at,
+            end_at: new_end_at,
+            is_allday:  request.has_is_allday?   ? request.is_allday : link.is_allday,
+            updated_by: user_id
+          )
+
+          # 응답
+          link_object = Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLink.new(
+            link_id:  link.id,
+            schedule_id:  schedule.id,
+            title: link.title,
+            description: link.description,
+            place_id:  link.place_id,
+            place_text: link.place_text,
+            start_at: link.start_at&.strftime("%Y-%m-%dT%H:%M"),
+            end_at: link.end_at&.strftime("%Y-%m-%dT%H:%M"),
+            is_allday:  link.is_allday,
+            created_by: link.created_by
+          )
+
+          Bannote::Scheduleservice::ScheduleLink::V1::UpdateScheduleLinkResponse.new(
+            schedule_link: link_object
+          )
+        end
 
         end
       end
