@@ -45,8 +45,6 @@ module Bannote
            end
 
             # presigned url생성
-
-
             # 정상 응답 반환
             Bannote::Scheduleservice::ScheduleFile::V1::GetScheduleFileResponse.new(
               schedule_file: Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFile.new(

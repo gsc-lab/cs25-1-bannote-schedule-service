@@ -116,7 +116,7 @@ module Bannote
         end
 
           # 3. 일정 링크 수정
-         def update_schedule_link(request, call)
+        def update_schedule_link(request, call)
           user_id, role = RoleHelper.verify_user(call)
           raise GRPC::Unauthenticated.new("인증 실패") if user_id.nil?
 
@@ -142,21 +142,21 @@ module Bannote
             end
           end
 
-            # 시간 처리
-            new_start_at = request.has_start_at? ? Time.zone.parse(request.start_at) : link.start_at
-            new_end_at = request.has_end_at?   ? Time.zone.parse(request.end_at)   : link.end_at
+          # 시간 처리
+          new_start_at = request.has_start_at? ? Time.zone.parse(request.start_at) : link.start_at
+          new_end_at = request.has_end_at?   ? Time.zone.parse(request.end_at)   : link.end_at
 
-            if request.has_start_at? && request.has_end_at?
-              raise GRPC::InvalidArgument.new("종료 시간은 시작 시간 이후여야 합니다.") if new_end_at <= new_start_at
-            end
+          if request.has_start_at? && request.has_end_at?
+            raise GRPC::InvalidArgument.new("종료 시간은 시작 시간 이후여야 합니다.") if new_end_at <= new_start_at
+          end
 
           link.update!(
-            title:  request.has_title? ? request.title  : link.title,
-            place_text:  request.has_place_text?  ? request.place_text  : link.place_text,
+            title:  request.has_title? ? request.title : link.title,
+            place_text:  request.has_place_text? ? request.place_text : link.place_text,
             description: request.has_description? ? request.description : link.description,
             start_at: new_start_at,
             end_at: new_end_at,
-            is_allday:  request.has_is_allday?   ? request.is_allday : link.is_allday,
+            is_allday:  request.has_is_allday?  ? request.is_allday : link.is_allday,
             updated_by: user_id
           )
 
@@ -177,8 +177,7 @@ module Bannote
           Bannote::Scheduleservice::ScheduleLink::V1::UpdateScheduleLinkResponse.new(
             schedule_link: link_object
           )
-        end
-
+          end
         end
       end
     end

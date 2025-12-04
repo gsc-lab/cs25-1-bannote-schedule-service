@@ -90,7 +90,6 @@ module Bannote
             end
           end
 
-              
           # 2. 그룹 목록 조회 (여러 그룹을 한번에 가져옴)
           def get_group_list(request, call)
             puts ">>> DEBUG tag_names = #{request.tag_names.inspect}"
@@ -131,18 +130,15 @@ module Bannote
             end
 
             groups = groups_query.distinct
-
             # 4. 페이징 처리
             page = request.page > 0 ? request.page : 1
             per_page = request.per_page > 0 ? request.per_page : 10
-
             total_count = ::Group.from(groups, :group_subquery).count
             total_pages = (total_count / per_page.to_f).ceil
             paginated_groups = groups.limit(per_page).offset((page - 1) * per_page)
 
             # 5. 북마크 여부
             bookmarked_group_ids = ::UserGroup.where(user_id: user_id).pluck(:group_id).to_set
-
             grpc_groups = paginated_groups.map do |g|
               grpc_group = build_group_response(g)
               grpc_group.bookmark = bookmarked_group_ids.include?(g.id)
@@ -167,7 +163,6 @@ module Bannote
 
             #  메타데이터
             user_id, role = RoleHelper.verify_user(call)
-
             group = ::Group.includes(:tags, :group_permission).find(group_id)
 
             # 응답 변환
@@ -336,7 +331,6 @@ module Bannote
               user_id: raw_user_number,
               created_at: Time.current
             )
-
             AddGroupEditorResponse.new(success: true)
           end
 

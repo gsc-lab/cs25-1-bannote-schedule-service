@@ -285,16 +285,16 @@ module Bannote::Scheduleservice::Schedule::V1
 
     if link_data
       is_all_day = link_data.is_allday || false
-
+      #기존 스케줄 링크의 시간값(변경전)
       old_start = link.start_time
-      old_end   = link.end_time
-
+      old_end = link.end_time
+      #요청있으면 시간 변경 
       new_start = link_data.start_at.present? ? parse_datetime(link_data.start_at) : old_start
-      new_end   = link_data.end_at.present?   ? parse_datetime(link_data.end_at)   : old_end
-
+      new_end = link_data.end_at.present? ? parse_datetime(link_data.end_at)  : old_end
+      #adllday 이면 전체 시간 강제변경
       if is_all_day
         new_start = new_start&.beginning_of_day
-        new_end   = new_end&.end_of_day
+        new_end = new_end&.end_of_day
       end
 
       if new_start && new_end && new_end <= new_start
@@ -346,7 +346,6 @@ module Bannote::Scheduleservice::Schedule::V1
     )
   end
 
-  
   #5. schedule 삭제
   def delete_schedule(request, call)
     current_user_number, role = RoleHelper.verify_user(call)

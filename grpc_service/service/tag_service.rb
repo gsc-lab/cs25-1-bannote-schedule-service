@@ -18,7 +18,7 @@ module Bannote::Scheduleservice::Tag::V1
 
       # 관리자 이상만 생성 가능
       unless RoleHelper.has_authority?(role,"TA") #TODO: 전체 권한 한번더 검증 및 로직 검사
-        raise GRPC::PermissionDenied.new("태그 생성은 조교님 이y상 가능합니다.")
+        raise GRPC::PermissionDenied.new("태그 생성은 조교님 이상 가능합니다.")
       end
 
       # tag이름 중복시
@@ -27,7 +27,7 @@ module Bannote::Scheduleservice::Tag::V1
       end
 
       # 5.생성
-      tag = ::Tag.create!(name: request.name, created_by: user_id)
+      tag = ::Tag.create!(name: request.name, created_by: user_id) #TODO: USER_NUMBER
 
       # 6. 응답 반환
       Bannote::Scheduleservice::Tag::V1::CreateTagResponse.new(tag: build_tag_response(tag))
@@ -46,7 +46,7 @@ module Bannote::Scheduleservice::Tag::V1
       raise GRPC::NotFound.new("태그를 찾을 수 없습니다.") unless tag
 
       # 학생 권한: 공개 그룹 태그인지 체크
-      unless RoleHelper.has_authority?(role,  "TA")
+      unless RoleHelper.has_authority?(role,"TA")
         is_public = ::Group
               .joins(:group_tags)
               .where(is_public: true, group_tags: { tag_id: tag.id })
@@ -59,6 +59,8 @@ module Bannote::Scheduleservice::Tag::V1
         tag: build_tag_response(tag)
       )
 
+    rescue GRPC::BadStatus => e
+      raise e
     rescue => e
       raise GRPC::Internal.new("태그 조회 실패: #{e.message}")
     end
@@ -66,12 +68,12 @@ module Bannote::Scheduleservice::Tag::V1
     # 3. 태그 목록 조회
     def get_tag_list(request, call)
       user_id, role = RoleHelper.verify_user(call)
-
+      #페이지네이션 
       page = request.page > 0 ? request.page : 1
       per_page = request.per_page > 0 ? request.per_page : 10
 
       # 권한에 따라 조회 범위 구분
-      if RoleHelper.has_authority?(role, 4)
+      if RoleHelper.has_authority?(role, "TA")
         tags = ::Tag.all
       else
         tags = ::Tag.joins(:groups)
@@ -102,7 +104,6 @@ module Bannote::Scheduleservice::Tag::V1
     #태그 상세 조회
    def get_many_tags(request, call)
       user_id, role = RoleHelper.verify_user(call)
-
       tag_ids = request.tag_ids
       raise GRPC::InvalidArgument.new("tag_ids는 필수입니다.") if tag_ids.empty?
       tag_ids = tag_ids.map(&:to_i)
@@ -113,13 +114,18 @@ module Bannote::Scheduleservice::Tag::V1
       Bannote::Scheduleservice::Tag::V1::GetManyTagsResponse.new(
         tags: grpc_tags
       )
+
+      rescue GRPC::BadStatus => e
+        raise e
+
+      rescue => e
+        raise GRPC::Internal.new("여러 태그 조회 실패: #{e.message}")
     end
 
     # 4. 태그 삭제
     def delete_tag(request, call)
       # 1.메타데이터
       user_id, role = RoleHelper.verify_user(call)
-
       # 2. 파싱
       tag_id = request.tag_id
       raise GRPC::InvalidArgument.new("tag_id는 필수입니다") if tag_id.nil? || tag_id <=0
@@ -132,8 +138,10 @@ module Bannote::Scheduleservice::Tag::V1
       tag = ::Tag.find_by(id: tag_id)
       raise GRPC::NotFound.new("삭제할 태그를 찾을 수 없습니다.") unless tag
 
-      tag.destroy
-        Bannote::Scheduleservice::Tag::V1::DeleteTagResponse.new(success: true)
+      tag.destroy!
+        return Bannote::Scheduleservice::Tag::V1::DeleteTagResponse.new(success: true)
+    rescue GRPC::BadStatus => e
+    raise e
 
     rescue => e
       raise GRPC::Internal.new("태그 삭제 실패: #{e.message}")
