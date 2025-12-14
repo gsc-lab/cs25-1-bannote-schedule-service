@@ -1,0 +1,6 @@
+DBG 250: tput reports color support: true
+DBG 250: Using color escape sequences from tput
+DBG 250: Loading module builtin (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.builtin
+DBG 250: Loading module host (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.host
+DBG 250: Loading module cc (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.cc
+DBG 250: Loading module self (required by base) from configure.self

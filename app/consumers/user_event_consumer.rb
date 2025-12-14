@@ -1,37 +1,23 @@
-# app/consumers/user_event_consumer.rb
+# frozen_string_literal: true
 
-require 'kafka'
-require 'common-service/events/enums_pb'
-require 'common-service/events/user_events_pb'
+require 'proto/common_service/events/enums_pb'
+require 'proto/common_service/events/user_events_pb'
 
-class UserEventConsumer
-  def initialize
-    @kafka = Kafka.new(
-      [ENV["KAFKA_BROKER"] || "kafka:9092"],
-      client_id: "schedule-service"
-    )
-
-    @consumer = @kafka.consumer(group_id: "schedule-service-group")
-    @consumer.subscribe("user.changed")
-  end
-
-  def start
-    puts "kafka consumer 시작"
-
-    @consumer.each_message do |msg|
+class UserEventConsumer < ApplicationConsumer
+  def consume
+    params_batch.each do |params|
       begin
-        event = Bannote::Commonservice::Events::V1::UserChangedEvent.decode(msg.value)
-        handle_user_changed(event)
+        event = Bannote::Commonservice::Events::V1::UserChangedEvent.decode(params.raw_payload)
+        handle_event(event)
       rescue => e
-        puts "decode 실패: #{e.message}"
+        puts "[Karafka] decode 실패: #{e.message}"
       end
     end
   end
 
   private
 
-  def handle_user_changed(event)
-    puts "schedule-service 유저 변경 처리 완료: #{event.user_code}"
+  def handle_event(event)
     update_user(event)
     update_department(event)
   end
@@ -46,7 +32,7 @@ class UserEventConsumer
       default_group_id: user.default_group_id || 1
     )
 
-    puts "user 업데이트 완료: #{user.id}"
+    puts "[Karafka] user 업데이트 완료: #{user.user_number}"
   end
 
   def update_department(event)
@@ -58,6 +44,6 @@ class UserEventConsumer
       department_name: event.department_name
     )
 
-    puts "Department 업데이트 완료: #{dept.department_code}"
+    puts "[Karafka] department 업데이트 완료: #{dept.department_code}"
   end
 end
