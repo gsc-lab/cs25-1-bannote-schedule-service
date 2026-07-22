@@ -1,0 +1,29 @@
+current directory: C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext
+C:/Ruby34-x64/bin/ruby.exe -rrubygems C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/rake-13.3.0/exe/rake RUBYARCHDIR\=C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/extensions/x64-mingw-ucrt/3.4.0/karafka-rdkafka-0.23.1 RUBYLIBDIR\=C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/extensions/x64-mingw-ucrt/3.4.0/karafka-rdkafka-0.23.1
+Extracting librdkafka-2.12.1.tar.gz into tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1... OK
+Running git apply with C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/dist/patches/rdkafka_global_init.patch... OK
+Running 'configure' for librdkafka 2.12.1... ERROR. Please review logs to see what happened:
+----- contents of 'C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/configure.log' -----
+mklove/modules/configure.base: 행 2126번: source: configure.self: 파일을 찾을 수 없음
+----- end of file -----
+----- contents of 'config.log' -----
+DBG 250: tput reports color support: true
+DBG 250: Using color escape sequences from tput
+DBG 250: Loading module builtin (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.builtin
+DBG 250: Loading module host (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.host
+DBG 250: Loading module cc (required by base) from /c/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/tmp/x86_64-w64-mingw32/ports/librdkafka/2.12.1/librdkafka-2.12.1/mklove/modules/configure.cc
+DBG 250: Loading module self (required by base) from configure.self
+----- end of file -----
+rake aborted!
+Failed to complete configure task
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mini_portile2-2.8.9/lib/mini_portile2/mini_portile.rb:628:in 'block in MiniPortile#execute'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mini_portile2-2.8.9/lib/mini_portile2/mini_portile.rb:594:in 'Dir.chdir'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mini_portile2-2.8.9/lib/mini_portile2/mini_portile.rb:594:in 'MiniPortile#execute'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mini_portile2-2.8.9/lib/mini_portile2/mini_portile.rb:191:in 'MiniPortile#configure'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/mini_portile2-2.8.9/lib/mini_portile2/mini_portile.rb:237:in 'MiniPortile#cook'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/karafka-rdkafka-0.23.1/ext/Rakefile:43:in 'block in <top (required)>'
+C:/Users/user/Desktop/ban_note/ban_note/vendor/bundle/ruby/3.4.0/gems/rake-13.3.0/exe/rake:27:in '<main>'
+Tasks: TOP => default
+(See full trace by running task with --trace)
+
+rake failed, exit code 1

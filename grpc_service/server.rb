@@ -1,6 +1,17 @@
 # 1. gRPC 라이브러리 로드
 require 'grpc'
 
+#lib/
+$LOAD_PATH.unshift(File.expand_path('lib', __dir__))
+#lib/event/v1
+$LOAD_PATH.unshift(File.expand_path('lib/events/v1', __dir__))
+# service/
+$LOAD_PATH.unshift(File.expand_path('service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/common-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/schedule-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/token-service', __dir__))
+$LOAD_PATH.unshift(File.expand_path('lib/user-service', __dir__))
+
 # 2. Rails 환경 로드
 require File.expand_path('../config/environment', __dir__)
 Rails.application.eager_load!
@@ -8,6 +19,7 @@ Rails.application.eager_load!
 # 3. Ruby 검색 경로 추가
 lib_dir = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib_dir) unless $LOAD_PATH.include?(lib_dir)
+
 # 서비스 구현 파일이 있는 service 디렉토리도 경로에 추가
 service_dir = File.expand_path('service', __dir__)
 $LOAD_PATH.unshift(service_dir) unless $LOAD_PATH.include?(service_dir)
@@ -25,26 +37,30 @@ require 'tag/tag_pb'
 require 'tag/tag_service_services_pb'
 require 'schedule/schedule_pb'
 require 'schedule/schedule_service_services_pb'
-require 'schedule_link/schedule_link_pb'
-require 'schedule_link/schedule_link_service_services_pb'
-require 'schedule_file/schedule_file_pb'
-require 'schedule_file/schedule_file_service_services_pb'
+# require 'schedule_link/schedule_link_pb'
+# require 'schedule_link/schedule_link_service_services_pb'
+# require 'schedule_file/schedule_file_pb'
+# require 'schedule_file/schedule_file_service_services_pb'
 
 # 직접 구현한 서비스 핸들러 파일들 로드
 require_relative 'service/group_service'
 require_relative 'service/group_tag_service'
-# require_relative 'service/user_group_service'
+require_relative 'service/user_group_service'
 require_relative 'service/tag_service'
 require_relative 'service/schedule_service'
-require_relative 'service/schedule_link_service'
-require_relative 'service/schedule_file_service'
+# require_relative 'service/schedule_link_service'
+# require_relative 'service/schedule_file_service'
 
-require_relative './health_check_service' 
+require_relative './health_check_service'
 
 module Bannote
   module Scheduleservice
   end
 end
+
+
+# require_relative "lib/kafka/user_changed_consumer"
+# require_relative "lib/kafka/department_changed_consumer"
 
 # 5. gRPC 서버 실행
 def main
@@ -56,16 +72,30 @@ def main
   server.handle(Bannote::Scheduleservice::Group::V1::GroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::GroupTag::V1::GroupTagServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Tag::V1::TagServiceHandler.new)
-  # server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
+  server.handle(Bannote::Scheduleservice::User::V1::UserGroupServiceHandler.new)
   server.handle(Bannote::Scheduleservice::Schedule::V1::ScheduleServiceHandler.new)
-  server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
-  server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
+  # server.handle(Bannote::Scheduleservice::ScheduleLink::V1::ScheduleLinkServiceHandler.new)
+  # server.handle(Bannote::Scheduleservice::ScheduleFile::V1::ScheduleFileServiceHandler.new)
   server.handle(Grpc::Health::V1::HealthServiceHandler)
 
   puts "gRPC 서버가 #{port} 포트에서 실행 중입니다..."
 
+  #kafka consumer 실행(user,department) -> 하나의 서버 프로세스 안에서 두 가지 일을 동시에 해야 해서 Thread가 필요
+  # Thread.new do
+  #   require_relative "lib/kafka/user_changed_consumer"
+  #   require_relative "lib/kafka/department_changed_consumer"
+
+  #   puts "kafka user, department시작"
+  #   Thread.new { UserChangedConsumer.start }
+  #   Thread.new { DepartmentChangedConsumer.start }
+  # end
+  
+  # puts "Kafka Consumers 시작"
+  # Thread.new { UserChangedConsumer.start }
+  # Thread.new { DepartmentChangedConsumer.start }
+
   #  서버 실행 (등록된 서비스 포함)
-  server.run_till_terminated_or_interrupted(['INT', 'TERM'])
+  server.run_till_terminated_or_interrupted([ 'INT', 'TERM' ])
   puts "서버가 종료되었습니다."
 end
 

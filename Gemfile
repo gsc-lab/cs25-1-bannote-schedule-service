@@ -4,9 +4,11 @@ source "https://rubygems.org"
 gem "grpc"
 gem "google-protobuf"
 gem "redis"
+# gem "grpc-tools"
 gem "ruby-kafka"
-gem "grpc-tools"
 
+gem "karafka", "~> 2.5"
+gem "waterdrop", "~> 2.8"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.2", ">= 8.0.2.1"
@@ -63,3 +65,5 @@ gem "mysql2", "~> 0.5"
 
 # AWS S3 사용을 위한 Gem 추가
 gem "aws-sdk-s3", "~> 1"
+
+gem "timeout", "~> 0.4.3"

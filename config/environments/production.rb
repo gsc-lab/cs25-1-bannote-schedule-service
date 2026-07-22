@@ -80,6 +80,4 @@ Rails.application.configure do
 
   # dump 비활성화
   config.active_record.dump_schema_after_migration = false
-
-  
 end

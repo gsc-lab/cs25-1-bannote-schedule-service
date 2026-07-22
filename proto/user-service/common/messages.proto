@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package bannote.userservice.common.v1;
+
+import "google/protobuf/timestamp.proto"; 
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/common/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.common.v1";
+
+message AuditInfo {
+    google.protobuf.Timestamp created_at = 1;
+    optional google.protobuf.Timestamp deleted_at = 2;
+    optional string created_by = 3;
+    optional string deleted_by = 4;
+}

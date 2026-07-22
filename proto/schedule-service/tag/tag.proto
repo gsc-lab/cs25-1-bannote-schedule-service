@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.tag.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+message Tag {
+  int64 tag_id = 1;
+  string name = 2;
+  int64 created_by = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+message TagListResponse {
+  repeated Tag tags = 1;
+  
+  int32 page = 2;
+  int32 per_page = 3;
+  int64 total_count = 4;
+  int32 total_pages = 5;
+}

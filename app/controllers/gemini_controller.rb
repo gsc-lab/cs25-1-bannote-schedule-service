@@ -18,9 +18,9 @@ class GeminiController < ApplicationController
     # Gemini에 요청 보내기
     response = client.predict(
       endpoint: endpoint,
-      instances: [{ "prompt": prompt }]
+      instances: [ { "prompt": prompt } ]
     )
-    
+
     # 결과를 View로 전달하기 위해 @reply 변수에 저장
     @reply = response.predictions.first["content"]
   end

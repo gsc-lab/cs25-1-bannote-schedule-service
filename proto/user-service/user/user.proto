@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package bannote.userservice.user.v1;
+
+import "google/protobuf/timestamp.proto";
+import "user-service/common/enums.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/user/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.user.v1";
+
+// 학생 정보
+message Student {
+  UserBasic user = 1;
+  
+  string student_class_code = 2;
+  string student_class_name = 3;
+
+  string department_code = 4;
+  string department_name = 5;
+}
+
+// 직원 정보
+message Employee {
+  UserBasic user = 1;
+  
+  string department_code = 2;
+  string department_name = 3;
+}
+
+// 유저 기본 정보
+message UserBasic {
+  string user_code = 1;
+  string user_email = 2;
+  string user_name = 3;
+  string family_name = 4;
+  string given_name = 5;
+  bannote.userservice.common.v1.UserType type = 6;
+  bannote.userservice.common.v1.UserStatus status = 7;
+  string bio = 8;
+  string profile_image_url = 9;
+  google.protobuf.Timestamp created_at = 10;
+  optional google.protobuf.Timestamp deleted_at = 11;
+  repeated bannote.userservice.common.v1.UserRole user_roles = 12;
+}
+
+// 유저 상세 정보
+message UserDetail {
+  // 공통 필드
+  string user_code = 1;
+  string user_email = 2;
+  string user_name = 3;
+  string family_name = 4;
+  string given_name = 5;
+  bannote.userservice.common.v1.UserType user_type = 6;
+  bannote.userservice.common.v1.UserStatus user_status = 7;
+  string bio = 8;
+  string profile_image_url = 9;
+  google.protobuf.Timestamp created_at = 10;
+  optional google.protobuf.Timestamp deleted_at = 11;
+  repeated bannote.userservice.common.v1.UserRole user_roles = 12;
+
+  // 학생 전용 필드 (type이 STUDENT일 때만)
+  optional string student_class_code = 20;
+  optional string student_class_name = 21;
+
+  // 학과 필드 (학생/교직원)
+  optional string department_code = 30;
+  optional string department_name = 31;
+}

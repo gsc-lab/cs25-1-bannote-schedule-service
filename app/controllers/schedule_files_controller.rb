@@ -2,7 +2,7 @@ class ScheduleFilesController < ApplicationController
   before_action :set_group
   before_action :set_schedule
   before_action :set_schedule_link
-  before_action :set_schedule_file, only: [:show, :destroy]
+  before_action :set_schedule_file, only: [ :show, :destroy ]
 
   # 1. 파일 목록 조회 (GET)
   def index

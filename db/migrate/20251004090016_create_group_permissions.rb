@@ -9,7 +9,7 @@ class CreateGroupPermissions < ActiveRecord::Migration[8.0]
 end
 
 
-#sql
+# sql
 # CREATE TABLE `group_permissions`(
 #   `id` bigint NOT NULL AUTO_INCREMENT PRIMARY KEY,
 #   `permission` varchar(255) NOT NULL,

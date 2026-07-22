@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package bannote.scheduleservice.schedule.v1;
+
+import "google/protobuf/timestamp.proto";
+
+
+message ScheduleLink {
+  int64 schedule_link_id = 1; 
+  string title = 2;
+  optional int64 place_id = 3;
+  optional string place_text = 4;
+  string description = 5;
+  string start_at = 6;  // YYYY-MM-DDTHH:mm
+  string end_at = 7;  // YYYY-MM-DDTHH:mm
+  bool is_allday = 8;   
+}
+
+message Schedule {
+  int64 schedule_id = 1;
+  string code = 2;
+  int64 group_id = 3;
+  optional int64 schedule_link_id = 4;
+  optional string comment = 5;
+  string color = 6;
+  google.protobuf.Timestamp created_at = 7;
+  optional google.protobuf.Timestamp updated_at = 8;
+  optional google.protobuf.Timestamp deleted_at = 9;
+  int64 created_by = 10;
+  optional int64 updated_by = 11;
+  optional int64 deleted_by = 12;
+
+  // ScheduleLink 전체 포함
+  optional ScheduleLink schedule_link = 20;
+}
+
+message ScheduleListResponse {
+  repeated Schedule schedules = 1;
+
+  int32 page = 2;            // 현재 페이지
+  int32 per_page = 3;        // 요청한 per_page
+  int64 total_count = 4;     // 전체 스케줄 수
+  int32 total_pages = 5;     // 전체 페이지 수
+
+
+}

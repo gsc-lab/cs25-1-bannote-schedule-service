@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package bannote.userservice.studentclass.v1;
+
+import "user-service/studentclass/studentclass.proto";
+import "user-service/common/enums.proto";
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/student_class/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.student_class.v1";
+
+// Gateway에서 gRPC metadata로 전달되는 정보:
+// - user-id: 요청하는 유저의 ID
+// - user-role: 요청하는 유저의 역할 (ADMIN, STUDENT, EMPLOYEE 등)
+
+// The student class service definition.
+service StudentClassService {
+//  학반 ID로 학반 조회 API
+  rpc GetStudentClass (GetStudentClassRequest) returns (GetStudentClassResponse) {
+  }
+
+//  학반 생성 API
+  rpc CreateStudentClass (CreateStudentClassRequest) returns (CreateStudentClassResponse) {
+  }
+
+//  학반 수정 API
+  rpc UpdateStudentClass (UpdateStudentClassRequest) returns (UpdateStudentClassResponse) {
+  }
+
+//  학반 삭제 API
+  rpc DeleteStudentClass (DeleteStudentClassRequest) returns (DeleteStudentClassResponse) {
+  }
+
+//  학반 목록 조회 API
+  rpc ListStudentClasses (ListStudentClassesRequest) returns (ListStudentClassesResponse) {
+  }
+
+// 학반 ID 리스트로 학반 목록 조회 API (React Admin 지원)
+  rpc GetManyStudentClasses (GetManyStudentClassesRequest) returns (GetManyStudentClassesResponse) {
+
+  }
+}
+
+// 학반 조회 시 필요한 정보
+message GetStudentClassRequest {
+  string student_class_code = 1;
+}
+
+message GetStudentClassResponse {
+  StudentClass student_class = 1;
+}
+
+// 학반 생성 시 필요한 정보
+message CreateStudentClassRequest {
+  string department_code = 1;
+  string student_class_code = 2;
+  string student_class_name = 3;
+  int32 admission_year = 4;
+  int32 graduation_year = 5;
+  // created_by는 metadata의 user-id에서 추출
+}
+
+message CreateStudentClassResponse {
+  StudentClass student_class = 1;
+}
+
+// 학반 수정 시 필요한 정보
+message UpdateStudentClassRequest {
+  string student_class_code = 1;
+  optional string department_code = 2;
+  optional string student_class_name = 3;
+  optional int32 admission_year = 4;
+  optional int32 graduation_year = 5;
+  optional bannote.userservice.common.v1.StudentClassStatus status = 6;
+}
+
+message UpdateStudentClassResponse {
+  StudentClass student_class = 1;
+}
+
+// 학반 삭제 시 필요한 정보
+message DeleteStudentClassRequest {
+  string student_class_code = 1;
+  // deleted_by는 metadata의 user-id에서 추출
+}
+
+message DeleteStudentClassResponse {
+  StudentClass student_class = 1;
+}
+
+// 학반 목록 조회 시 필요한 정보
+message ListStudentClassesRequest {
+  optional string department_code = 1;
+  optional bannote.userservice.common.v1.StudentClassStatus status = 2;
+  int32 page = 3;
+  int32 size = 4;
+}
+
+// 학반 목록 조회 응답
+message ListStudentClassesResponse {
+  repeated StudentClass student_classes = 1;
+  int32 total_count = 2;
+  int32 page = 3;
+  int32 size = 4;
+}
+
+message GetManyStudentClassesRequest {
+  repeated string student_classes_code = 1;
+}
+
+message GetManyStudentClassesResponse {
+  repeated StudentClass student_classes = 1;
+}

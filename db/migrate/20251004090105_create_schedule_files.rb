@@ -8,6 +8,6 @@ class CreateScheduleFiles < ActiveRecord::Migration[8.0]
       t.timestamps  # created_at, updated_at 자동 생성
     end
 
-    add_index :schedule_files, :schedule_link_id  
+    add_index :schedule_files, :schedule_link_id
   end
 end

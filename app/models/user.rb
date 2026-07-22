@@ -1,12 +1,14 @@
 class User < ApplicationRecord
-  # 관계 설정
-  has_many :user_groups, dependent: :destroy
+  has_many :user_groups, primary_key: :user_number, foreign_key: :user_id
   has_many :groups, through: :user_groups
 
-  # 유효성 검사
+  belongs_to :department,
+           primary_key: :department_code,
+           foreign_key: :department_code,
+           optional: true
+
   validates :name, presence: true, length: { maximum: 20 }
   validates :email, presence: true, length: { maximum: 50 }
-  validates :department, presence: true, length: { maximum: 30 }
-
+  validates :department_code, presence: true, length: { maximum: 30 }
 
 end

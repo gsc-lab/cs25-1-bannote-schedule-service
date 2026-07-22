@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package bannote.tokenservice.token.v1;
+
+option java_multiple_files = true;
+option java_package = "com.bannote.tokenservice.proto.token.v1";
+
+service TokenService {
+  rpc GenerateAccessToken(GenerateAccessTokenRequest) returns (GenerateAccessTokenResponse);
+  rpc ValidateAccessToken(ValidateAccessTokenRequest) returns (ValidateAccessTokenResponse);
+}
+
+message GenerateAccessTokenRequest {
+  string user_id = 1;
+  string roles = 2;
+}
+
+message GenerateAccessTokenResponse {
+  string access_token = 1;
+  int64 expires_at = 2;
+}
+
+message ValidateAccessTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateAccessTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string roles = 3;
+  string error = 4;
+}

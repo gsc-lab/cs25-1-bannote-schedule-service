@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package bannote.userservice.alloweddomain.v1;
+
+import "google/protobuf/timestamp.proto"; 
+
+option go_package = "github.com/kyumin1227/bannote-proto/gen/go/user-service/allowed_domain/v1";
+option java_multiple_files = true;
+option java_package = "com.bannote.userservice.proto.allowed_domain.v1";
+
+// 허용된 도메인
+message AllowedDomain {
+  string domain = 1;
+  string created_by = 2;
+  google.protobuf.Timestamp created_at = 3;
+}
